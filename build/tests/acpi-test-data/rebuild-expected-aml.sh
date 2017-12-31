@@ -1,0 +1,1 @@
+/home/rd/Desktop/qemu/tests/acpi-test-data/rebuild-expected-aml.sh
