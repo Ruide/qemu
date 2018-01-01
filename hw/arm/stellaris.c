@@ -1228,6 +1228,9 @@ static stellaris_board_info stellaris_boards[] = {
 
 static void stellaris_init(MachineState *ms, stellaris_board_info *board)
 {
+
+    // Table 2-9. Interrupts
+    
     static const int uart_irq[] = {5, 6, 33, 34};
     static const int timer_irq[] = {19, 21, 23, 35};
     static const uint32_t gpio_addr[7] =
