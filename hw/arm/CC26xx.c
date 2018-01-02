@@ -38,13 +38,9 @@
 #include "hw/misc/unimp.h"
 #include "cpu.h"
 
-static void CC26xx_init(const char *kernel_filename, const char *cpu_model,
-                           stellaris_board_info *board)
-{
-
-}
 
 #define BP_OLED_I2C  0x01
+#define NUM_IRQ_LINES 64
 
 
 typedef const struct {
@@ -59,21 +55,13 @@ typedef const struct {
     uint32_t peripherals;
 } CC26xx_board_info;
 
-CC26xx_init(/*flash_size in bytes */ 128 * 1024,
-           /*ram_size in bytes */ 20 * 1024,
-           kernel_filename,
-           s->stm32_gpio,
-           s->stm32_uart,
-           8000000,
-           32768);
-
 
 /* Board init.  */
 static CC26xx_board_info CC26xx_boards[] = {
-  { "Sensortag",
+  { "sensortag",
     0,
     0x0032000e,
-    0x001f001f, /* dc0 */
+    0x001f001f, /* dc0 sram size & flash size, 0x1f => 2kb, we want 128kb flash, 20kb sram */
     0x001132bf,
     0x01071013,
     0x3f0f01ff,
@@ -82,12 +70,107 @@ static CC26xx_board_info CC26xx_boards[] = {
   }
 };
 
+/*
+
+   MemoryRegionOps
+
+ * Memory region callbacks
+ */
 
 
-static void CC26xx_machine_init(MachineClass *mc)
+static void do_sys_reset(void *opaque, int n, int level)
 {
-    mc->desc = "TI SensorTag CC26xx";
-    mc->init = CC26xx_init;
+    if (level) {
+        qemu_system_reset_request(SHUTDOWN_CAUSE_GUEST_RESET);
+    }
+}
+
+
+static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
+{
+    /*Table 4-2. Interrupts*/
+/*
+/Vector Number/ /Interrupt Number(Bit in Interrupt Registers)/ /Vector Address or Offset/ /Description/
+0 to 15 – 0x0000 0000 to 0x0000 003C Processor exceptions
+16 0 0x0000 0040 GPIO edge detect
+17 1 0x0000 0044 I2C
+18 2 0x0000 0048 RF Core and packet engine 1
+19 3 0x0000 004C Unassigned
+20 4 0x0000 0050 AON RTC
+21 5 0x0000 0054 UART0
+22 6 0x0000 0058 UART1
+23 7 0x0000 005C SSI0
+24 8 0x0000 0060 SSI1
+25 9 0x0000 0064 RF Core and packet engine 2
+26 10 0x0000 0068 RF Core hardware
+27 11 0x0000 006C RF command acknowledge
+28 12 0x0000 0070 I2S
+29 13 0x0000 0074 Unassigned
+30 14 0x0000 0078 Watchdog timer
+31 15 0x0000 007C GPTimer 0A
+32 16 0x0000 0080 GPTimer 0B
+33 17 0x0000 0084 GPTimer 1A
+34 18 0x0000 0088 GPTimer 1B
+35 19 0x0000 008C GPTimer 2A
+36 20 0x0000 0090 GPTimer 2B
+37 21 0x0000 0094 GPTimer 3A
+38 22 0x0000 0098 GPTimer 3B
+39 23 0x0000 009C Crypto
+40 24 0x0000 00A0 µDMA software defined
+41 25 0x0000 00A4 µDMA error
+42 26 0x0000 00A8 Flash
+43 27 0x0000 00AC Software event 0www.ti.com Exception Model
+44 28 0x0000 00B0 AUX combined event
+45 29 0x0000 00B4 AON programmable event
+46 30 0x0000 00B8 Dynamic programmable event
+47 31 0x0000 00BC AUX comparator A
+48 32 0x0000 00C0 AUX ADC new sample available or ADC DMA done, ADC underflow and overflow
+49 33 0x0000 00C4 True random number generator
+*/
+    
+/* unused function
+    static const int uart_irq[] = {5, 6};
+    static const int timer_irq[] = {15, 16, 17, 18, 19, 20, 21, 22};
+    static const int gpio_irq[1] = {0};
+
+    static const uint32_t gpio_addr[] = { 0x40022000};
+
+
+
+
+*/
+
+    int sram_size;
+    int flash_size;
+
+    MemoryRegion *sram = g_new(MemoryRegion, 1);
+    MemoryRegion *flash = g_new(MemoryRegion, 1);
+    MemoryRegion *system_memory = get_system_memory();
+
+    // flash_size = 128 * 1024; // 0x1f + 1 = 0x20, 0x20 << 1 = 0x40, 0x40 * 0x400 = 0x2000
+    // sram_size = ((board->dc0 >> 18) + 1) * 1024;// 1024 <=> 0x400, 1fxxxx >> 18 = 7, 18 <=> 0x12, 7 <=> 0b111, 0x1f <=> 0b11111
+    // 0x(xxxx) <=> 16 bit 0b(x), 0x400 * 0x8 = 0x2000
+    // LM3S6965 256kb flash 64kb sram
+
+	flash_size = 0x00020000; // 128kb, 0x0003ffff 256kb
+	sram_size = 0x00005000; // 0x4fff 20kb
+
+    /* Flash programming is done via the SCU, so pretend it is ROM.  */
+    memory_region_init_ram(flash, NULL, "CC26xx.flash", flash_size,
+                           &error_fatal);
+    memory_region_set_readonly(flash, true);
+    memory_region_add_subregion(system_memory, 0, flash);
+
+    memory_region_init_ram(sram, NULL, "CC26xx.sram", sram_size,
+                           &error_fatal);
+    memory_region_add_subregion(system_memory, 0x20000000, sram);
+
+	DeviceState *nvic;
+    nvic = armv7m_init(system_memory, flash_size, NUM_IRQ_LINES,
+                       ms->kernel_filename, ms->cpu_type);
+
+    qdev_connect_gpio_out_named(nvic, "SYSRESETREQ", 0,
+                                qemu_allocate_irq(&do_sys_reset, NULL, 0));
 
 
 
@@ -146,13 +229,12 @@ static void CC26xx_machine_init(MachineClass *mc)
 
 }
 
-DEFINE_MACHINE("CC26xx", CC26xx_machine_init)
 
 /* FIXME: Figure out how to generate these from stellaris_boards.  */
 static void Sensortag_init(MachineState *machine)
 {
     
-    CC26xx_init(machine, &CC26xx_boards);
+    CC26xx_init(machine, &CC26xx_boards[0]);
 }
 
 
@@ -160,7 +242,7 @@ static void Sensortag_class_init(ObjectClass *oc, void *data)
 {
     MachineClass *mc = MACHINE_CLASS(oc);
 
-    mc->desc = "CC26xx Sensortag";
+    mc->desc = "CC26xx sensortag";
     mc->init = Sensortag_init;
     mc->ignore_memory_transaction_failures = true;
     mc->default_cpu_type = ARM_CPU_TYPE_NAME("cortex-m3");
@@ -168,7 +250,7 @@ static void Sensortag_class_init(ObjectClass *oc, void *data)
 
 
 static const TypeInfo Sensortag_type = {
-    .name = MACHINE_TYPE_NAME("Sensortag"),
+    .name = MACHINE_TYPE_NAME("sensortag"),
     .parent = TYPE_MACHINE,
     .class_init = Sensortag_class_init,
 };
@@ -179,6 +261,7 @@ static void CC26xx_machine_init(void)
     type_register_static(&Sensortag_type);
 }
 
+type_init(CC26xx_machine_init)
 
 /*Table 3-2. Memory Map
 cortex M3 memory map

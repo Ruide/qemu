@@ -1230,7 +1230,7 @@ static void stellaris_init(MachineState *ms, stellaris_board_info *board)
 {
 
     // Table 2-9. Interrupts
-    
+
     static const int uart_irq[] = {5, 6, 33, 34};
     static const int timer_irq[] = {19, 21, 23, 35};
     static const uint32_t gpio_addr[7] =
@@ -1287,8 +1287,11 @@ static void stellaris_init(MachineState *ms, stellaris_board_info *board)
     MemoryRegion *flash = g_new(MemoryRegion, 1);
     MemoryRegion *system_memory = get_system_memory();
 
-    flash_size = (((board->dc0 & 0xffff) + 1) << 1) * 1024;
-    sram_size = ((board->dc0 >> 18) + 1) * 1024;
+    flash_size = (((board->dc0 & 0xffff) + 1) << 1) * 1024; // 0x1f + 1 = 0x20, 0x20 << 1 = 0x40, 0x40 * 0x400 = 0x2000
+    sram_size = ((board->dc0 >> 18) + 1) * 1024;// 1024 <=> 0x400, 1fxxxx >> 18 = 7, 18 <=> 0x12, 7 <=> 0b111, 0x1f <=> 0b11111
+    // 0x(xxxx) <=> 16 bit 0b(x), 0x400 * 0x8 = 0x2000
+    // LM3S6965 256kb flash 64kb sram
+
 
     /* Flash programming is done via the SCU, so pretend it is ROM.  */
     memory_region_init_ram(flash, NULL, "stellaris.flash", flash_size,
