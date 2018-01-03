@@ -152,7 +152,7 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     // 0x(xxxx) <=> 16 bit 0b(x), 0x400 * 0x8 = 0x2000
     // LM3S6965 256kb flash 64kb sram
 
-	flash_size = 0x00020000; // 128kb, 0x0003ffff 256kb
+	flash_size = 0x00020000; // 0x1ffff -> 0x20000 128kb, 0x0003ffff 256kb
 	sram_size = 0x00005000; // 0x4fff 20kb
 
     /* Flash programming is done via the SCU, so pretend it is ROM.  */
@@ -172,15 +172,20 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     qdev_connect_gpio_out_named(nvic, "SYSRESETREQ", 0,
                                 qemu_allocate_irq(&do_sys_reset, NULL, 0));
 
+    static const int uart_irq[] = {5};
 
+    pl011_luminary_create(0x40001000,
+                              qdev_get_gpio_in(nvic, uart_irq[0]),
+                              serial_hds[i]);
+    }
 
      /* Add dummy regions for the devices we don't implement yet,
      * so guest accesses don't cause unlogged crashes.
      */    
 
+    create_unimplemented_device("UART-0", 0x40001000, 0x1000);
     create_unimplemented_device("RF-core", 0x21000000, 0x1E000000);
     create_unimplemented_device("SSI-0", 0x40000000, 0x1000);
-    create_unimplemented_device("UART-0", 0x40001000, 0x1000);
     create_unimplemented_device("I2C-0", 0x40002000, 0x1000);
     create_unimplemented_device("GPT0", 0x40010000, 0x1000);
     create_unimplemented_device("GPT1", 0x40011000, 0x1000);

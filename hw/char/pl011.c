@@ -21,18 +21,18 @@ typedef struct PL011State {
 
     MemoryRegion iomem;
     uint32_t readbuff;
-    uint32_t flags;
-    uint32_t lcr;
-    uint32_t rsr;
-    uint32_t cr;
-    uint32_t dmacr;
-    uint32_t int_enabled;
-    uint32_t int_level;
-    uint32_t read_fifo[16];
-    uint32_t ilpr;
-    uint32_t ibrd;
-    uint32_t fbrd;
-    uint32_t ifl;
+    uint32_t flags;/*case 6 UARTFR */
+    uint32_t lcr;/*case 11 UARTLCR_H */
+    uint32_t rsr;/*case 1 UARTRSR */
+    uint32_t cr;/*case 12 UARTCR */
+    uint32_t dmacr;/*case 18 UARTDMACR */
+    uint32_t int_enabled;/*case 14 UARTIMSC */
+    uint32_t int_level;/*case 15 UARTRIS */
+    uint32_t read_fifo[16]; /*case 0 UARTDR */
+    uint32_t ilpr;/*case 8 UARTILPR */
+    uint32_t ibrd;/*case 9 UARTIBRD */
+    uint32_t fbrd;/*case 10 UARTFBRD */
+    uint32_t ifl;/*case 13 UARTIFLS */
     int read_pos;
     int read_count;
     int read_trigger;
@@ -59,7 +59,7 @@ static void pl011_update(PL011State *s)
     uint32_t flags;
 
     flags = s->int_level & s->int_enabled;
-    trace_pl011_irq_state(flags != 0);
+    trace_pl011_irq_state(flags != 0); // flags != 0 set up the level in log()
     qemu_set_irq(s->irq, flags != 0);
 }
 
