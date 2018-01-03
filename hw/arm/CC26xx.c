@@ -34,7 +34,7 @@
 #include "qemu/log.h"
 #include "exec/address-spaces.h"
 #include "sysemu/sysemu.h"
-#include "hw/char/pl011.h"
+#include "hw/char/sensortag_uart.h"
 #include "hw/misc/unimp.h"
 #include "cpu.h"
 
@@ -174,16 +174,15 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
 
     static const int uart_irq[] = {5};
 
-    pl011_luminary_create(0x40001000,
-                              qdev_get_gpio_in(nvic, uart_irq[0]),
-                              serial_hds[i]);
-    }
+    
+    //create_unimplemented_device("UART-0", 0x40001000, 0x1000);
+    
+    suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
 
      /* Add dummy regions for the devices we don't implement yet,
      * so guest accesses don't cause unlogged crashes.
      */    
 
-    create_unimplemented_device("UART-0", 0x40001000, 0x1000);
     create_unimplemented_device("RF-core", 0x21000000, 0x1E000000);
     create_unimplemented_device("SSI-0", 0x40000000, 0x1000);
     create_unimplemented_device("I2C-0", 0x40002000, 0x1000);
@@ -231,7 +230,6 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     create_unimplemented_device("CPU_FPB", 0xE0002000, 0xC000);
     create_unimplemented_device("CPU_SCS", 0xE000E000, 0x32000);
     create_unimplemented_device("CPU_TPIU", 0xE0040000, 0x1000);
-
 }
 
 

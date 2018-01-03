@@ -38,7 +38,7 @@ typedef struct PL011State {
     int read_trigger;
     CharBackend chr;
     qemu_irq irq;
-    const unsigned char *id;
+    const unsigned char *id;// for UARTPheriparal ID and cell ID
 } PL011State;
 
 #define PL011_INT_TX 0x20
@@ -52,7 +52,7 @@ typedef struct PL011State {
 static const unsigned char pl011_id_arm[8] =
   { 0x11, 0x10, 0x14, 0x00, 0x0d, 0xf0, 0x05, 0xb1 };
 static const unsigned char pl011_id_luminary[8] =
-  { 0x11, 0x00, 0x18, 0x01, 0x0d, 0xf0, 0x05, 0xb1 };
+  { 0x11, 0x00, 0x18, 0x01, 0x0d, 0xf0, 0x05, 0xb1 };// for UARTPheriparal ID and cell ID
 
 static void pl011_update(PL011State *s)
 {
@@ -330,6 +330,7 @@ static void pl011_realize(DeviceState *dev, Error **errp)
 
     qemu_chr_fe_set_handlers(&s->chr, pl011_can_receive, pl011_receive,
                              pl011_event, NULL, s, NULL, true);
+                             // char backend as a file. So save the devicestate in a file
 }
 
 static void pl011_class_init(ObjectClass *oc, void *data)
