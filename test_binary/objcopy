@@ -1,0 +1,1 @@
+arm-none-eabi-objcopy -O binary hello_CC2650STK_TI.out hello.bin

@@ -101,8 +101,19 @@ static const char * trace_event_get_name(TraceEvent *ev);
  * If the event has the disabled property, the check will have no performance
  * impact.
  */
+
+/* The ## operator (known as the "Token Pasting Operator") concatenates two tokens into one token.
+
+Example:
+
+#define DECLARE_STRUCT_TYPE(name) typedef struct name##_s name##_t
+
+DECLARE_STRUCT_TYPE(g_object); // Outputs: typedef struct g_object_s g_object_t;
+*/
+
 #define trace_event_get_state(id)                       \
     ((id ##_ENABLED) && trace_event_get_state_dynamic_by_id(id))
+
 
 /**
  * trace_event_get_state_backends:
