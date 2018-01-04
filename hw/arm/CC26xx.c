@@ -152,7 +152,8 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     // 0x(xxxx) <=> 16 bit 0b(x), 0x400 * 0x8 = 0x2000
     // LM3S6965 256kb flash 64kb sram
 
-	flash_size = 0x00020000; // 0x1ffff -> 0x20000 128kb, 0x0003ffff 256kb
+	flash_size = 0x00020000; // 0x1ffff -> 0x20000 128kb, 0x0003ffff 256kb, 
+    // 20000 hex Bytes = 131072 decimal Bytes = 128KiB decimal = 128 * 1024 decimal = > * 8 bits
 	sram_size = 0x00005000; // 0x4fff 20kb
 
     /* Flash programming is done via the SCU, so pretend it is ROM.  */
@@ -232,6 +233,11 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     create_unimplemented_device("CPU_TPIU", 0xE0040000, 0x1000);
 }
 
+
+/*
+FCFG1 Register Summary
+0x500010A0 ~ 0x5000141C
+*/
 
 /* FIXME: Figure out how to generate these from stellaris_boards.  */
 static void Sensortag_init(MachineState *machine)
