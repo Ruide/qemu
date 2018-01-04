@@ -18,7 +18,6 @@
 
 typedef struct PL011State {
     SysBusDevice parent_obj;
-
     MemoryRegion iomem;
     uint32_t readbuff;
     uint32_t flags;/*case 6 UARTFR */
@@ -316,10 +315,10 @@ static void pl011_init(Object *obj)
     sysbus_init_mmio(sbd, &s->iomem);
     sysbus_init_irq(sbd, &s->irq);
 
-    s->read_trigger = 1;
-    s->ifl = 0x12;
-    s->cr = 0x300;
-    s->flags = 0x90;
+    s->read_trigger = 1; // int
+    s->ifl = 0x12; /*case 13 UARTIFLS */
+    s->cr = 0x300; /*case 12 UARTCR */
+    s->flags = 0x90; /*case 6 UARTFR */
 
     s->id = pl011_id_arm;
 }
