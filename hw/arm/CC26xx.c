@@ -35,6 +35,7 @@
 #include "exec/address-spaces.h"
 #include "sysemu/sysemu.h"
 #include "hw/char/sensortag_uart.h"
+#include "hw/misc/CC26xx_misc.h"
 #include "hw/misc/unimp.h"
 #include "cpu.h"
 
@@ -134,17 +135,33 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     static const int gpio_irq[1] = {0};
 
     static const uint32_t gpio_addr[] = { 0x40022000};
-
-
-
-
 */
 
     int sram_size;
     int flash_size;
 
-    MemoryRegion *sram = g_new(MemoryRegion, 1);
+/*g_new()
+#define g_new(struct_type, n_structs)
+
+Allocates n_structs elements of type struct_type . The returned pointer is cast to a pointer to the given type. If n_structs is 0 it returns NULL. Care is taken to avoid overflow when calculating the size of the allocated block.
+Since the returned pointer is already casted to the right type, it is normally unnecessary to cast it explicitly, and doing so might hide memory allocation errors.
+
+Parameters:
+struct_type: the type of the elements to allocate
+n_structs: the number of elements to allocate
+
+Returns
+a pointer to the allocated memory, cast to a pointer to struct_type
+
+
+*/
+
+    MemoryRegion *sram = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
     MemoryRegion *flash = g_new(MemoryRegion, 1);
+
+/* Get the root memory region.  This interface should only be used temporarily
+ * until a proper bus interface is available.
+ */
     MemoryRegion *system_memory = get_system_memory();
 
     // flash_size = 128 * 1024; // 0x1f + 1 = 0x20, 0x20 << 1 = 0x40, 0x40 * 0x400 = 0x2000
@@ -175,10 +192,15 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
 
     static const int uart_irq[] = {5};
 
-    
-    //create_unimplemented_device("UART-0", 0x40001000, 0x1000);
-    
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
+    SensortagFCFG_create(0x50001000);
+
+    //create_unimplemented_device("FCFG",0x50001000, 0x2000);
+    /*
+    FCFG1 Register Summary
+    0x500010A0 ~ 0x5000141C
+    */
+
 
      /* Add dummy regions for the devices we don't implement yet,
      * so guest accesses don't cause unlogged crashes.
@@ -224,7 +246,6 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
     create_unimplemented_device("AUX_ADI4", 0x400CB000, 0x15000);
     create_unimplemented_device("AUX_RAM", 0x400E0000, 0x1000);
     create_unimplemented_device("AUX_SCE", 0x400E1000, 0xFF20000);
-    create_unimplemented_device("FCFG-1", 0x50001000, 0x2000);
     create_unimplemented_device("CCFG", 0x50003000, 0x8FFFD000);
     create_unimplemented_device("CPU_ITM", 0xE0000000, 0x1000);
     create_unimplemented_device("CPU_DWT", 0xE0001000, 0x1000);
@@ -234,10 +255,6 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
 }
 
 
-/*
-FCFG1 Register Summary
-0x500010A0 ~ 0x5000141C
-*/
 
 /* FIXME: Figure out how to generate these from stellaris_boards.  */
 static void Sensortag_init(MachineState *machine)
