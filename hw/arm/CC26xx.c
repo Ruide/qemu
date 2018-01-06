@@ -193,7 +193,7 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     static const int uart_irq[] = {5};
 
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
-    SensortagFCFG_create(0x50001000);
+    SensortagFCFG_create(0x50001000, 0x2000);
 
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
     /*

@@ -1,2 +1,4 @@
 set disassemble-next-line on
 target remote localhost:1234
+#rwatch *0x50001318
+#rwatch *0x5000131C
