@@ -193,9 +193,12 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     static const int uart_irq[] = {5};
 
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
-    SensortagFCFG_create(0x50001000, 0x2000);
-
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
+    SensortagFCFG_create(0x50001000, 0x2000);
+    //create_unimplemented_device("FLASH", 0x40030000, 0x4000);
+    Dummydevice_create("SensortagFLASH",0x40030000, 0x4000);
+    create_empty_ram("Empty_ram",0x20005000, 0xDFFFAFFF);
+
     /*
     FCFG1 Register Summary
     0x500010A0 ~ 0x5000141C
@@ -218,7 +221,6 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     create_unimplemented_device("GPIO", 0x40022000, 0x2000);
     create_unimplemented_device("CRYPTO", 0x40024000, 0x4000);
     create_unimplemented_device("TRNG", 0x40028000, 0x8000);
-    create_unimplemented_device("FLASH", 0x40030000, 0x4000);
     create_unimplemented_device("VIMS", 0x40034000, 0xC000);
     create_unimplemented_device("RF-core-PWR", 0x40040000, 0x1000);
     create_unimplemented_device("RF-core-DBELL", 0x40041000, 0x2000);

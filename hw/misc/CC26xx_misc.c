@@ -13,6 +13,192 @@
 #include "qapi/error.h"
 
 
+
+//Empty ram section
+
+
+typedef struct Empty_ram_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section transfered from CC26xx.c
+} Empty_ram_state;
+
+static uint64_t Empty_ram_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+
+	qemu_log_mask(LOG_UNIMP,
+                      "Empty_ram_read_unimplemented: Bad offset %x\n", (int)offset);
+    return 0x0;
+}
+
+static void Empty_ram_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+	qemu_log_mask(LOG_UNIMP,
+                      "Empty_ram_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+}
+
+static const MemoryRegionOps Empty_ram_ops = {
+    .read = Empty_ram_read, 
+    .write = Empty_ram_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+
+#define Empty_ram(obj) \
+    OBJECT_CHECK(Empty_ram_state, (obj), "Empty_ram")
+
+
+
+static void Empty_ram_realize(DeviceState *dev, Error **errp)
+{
+    Empty_ram_state *s = Empty_ram(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &Empty_ram_ops, s,
+                          "Empty_ram", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+}
+
+static Property Empty_ram_properties[] = {
+    DEFINE_PROP_UINT64("size", Empty_ram_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void Empty_ram_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = Empty_ram_realize;
+    dc->props = Empty_ram_properties;
+}
+
+
+static const TypeInfo Empty_ram_info = {
+    .name          = "Empty_ram",
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(Empty_ram_state),
+    .class_init    = Empty_ram_class_init, 
+};
+
+static void Empty_ram_register_types(void)
+{
+    type_register_static(&Empty_ram_info);
+}
+
+type_init(Empty_ram_register_types)
+
+
+
+
+
+
+
+//FLASH section
+
+
+
+typedef struct SensortagFLASH_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section transfered from CC26xx.c
+} SensortagFLASH_state;
+
+static uint64_t SensortagFLASH_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+	uint64_t r;
+
+    switch(offset){
+ 	case 0xA0:
+    	r = 0xFFFFFF01;
+       	return r;
+    case 0x318:
+    	r = 0x8B99A02F;
+       	return r;
+    case 0x31C:
+    	r = 0x00000025;
+    	return r;
+	default:
+		qemu_log_mask(LOG_UNIMP,
+                      "SensortagFLASH_read_unimplemented: Bad offset %x\n", (int)offset);
+        return 0x0;
+    }
+}
+
+static void SensortagFLASH_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+	qemu_log_mask(LOG_UNIMP,
+                      "SensortagFLASH_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+}
+
+static const MemoryRegionOps SensortagFLASH_ops = {
+    .read = SensortagFLASH_read, 
+    .write = SensortagFLASH_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+#define Type_SensortagFLASH "SensortagFLASH"
+
+#define SensortagFLASH(obj) \
+    OBJECT_CHECK(SensortagFLASH_state, (obj), Type_SensortagFLASH)
+
+
+
+static void SensortagFLASH_realize(DeviceState *dev, Error **errp)
+{
+    SensortagFLASH_state *s = SensortagFLASH(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &SensortagFLASH_ops, s,
+                          "FLASH", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+}
+
+static Property SensortagFLASH_properties[] = {
+    DEFINE_PROP_UINT64("size", SensortagFLASH_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void SensortagFLASH_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = SensortagFLASH_realize;
+    dc->props = SensortagFLASH_properties;
+}
+
+
+static const TypeInfo SensortagFLASH_info = {
+    .name          = Type_SensortagFLASH,
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(SensortagFLASH_state),
+    .class_init    = SensortagFLASH_class_init, 
+};
+
+static void SensortagFLASH_register_types(void)
+{
+    type_register_static(&SensortagFLASH_info);
+}
+
+type_init(SensortagFLASH_register_types)
+
+
+
+
+
 typedef struct SensortagFCFG_state {
     SysBusDevice parent_obj;
     MemoryRegion iomem;
@@ -58,7 +244,7 @@ static void SensortagFCFG_write(void *opaque, hwaddr offset, uint64_t value,
                                    unsigned size)
 {    
 	qemu_log_mask(LOG_UNIMP,
-                      "SensortagFCFG_unimplemented: Bad offset %x\n Write value %x\n", (int)offset,(int)value);
+                      "SensortagFCFG_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
 }
 
 
