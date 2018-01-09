@@ -197,8 +197,24 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     SensortagFCFG_create(0x50001000, 0x2000);
     //create_unimplemented_device("FLASH", 0x40030000, 0x4000);
     Dummydevice_create("SensortagFLASH",0x40030000, 0x4000);
-    create_empty_ram("Empty_ram",0x20005000, 0xDFFFAFFF);
+    //create_empty_ram("Empty_ram",0x, 0x00010000);
 
+
+
+    /* 2 bit-banding regions of memory (to avoid read-modify-write(which is effected by interrupt))
+    1. addresses from 0x22000000 to 0x220FFFFF are used for bit-banding the 32KB region from 0x20000000 to 0x20007FFF
+    2. addresses from 0x42000000 to 0x43FFFFFF are used for bit-banding the 1 MB region from 0x40000000 to 0x400FFFFF
+    
+    0x20000000 ==> Base address of SRAM
+    0x22000000 ==> Base address of SRAM alias region
+
+    0x40000000 ==> Base address of peripheral region
+    0x42000000 ==> Base address of peripheral alias region
+
+    so, write to a 32bit value in memory address in bit-banding alias region is equal to write a 1bit value in bit-banding region.
+    
+    e.g. 0x42600484 mapped to 0x40030024
+    */
     /*
     FCFG1 Register Summary
     0x500010A0 ~ 0x5000141C

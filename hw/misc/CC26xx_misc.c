@@ -14,91 +14,6 @@
 
 
 
-//Empty ram section
-
-
-typedef struct Empty_ram_state {
-    SysBusDevice parent_obj;
-    MemoryRegion iomem;
-    uint64_t size; // size of mimo section transfered from CC26xx.c
-} Empty_ram_state;
-
-static uint64_t Empty_ram_read(void *opaque, hwaddr offset,
-                                   unsigned size)
-{    
-
-	qemu_log_mask(LOG_UNIMP,
-                      "Empty_ram_read_unimplemented: Bad offset %x\n", (int)offset);
-    return 0x0;
-}
-
-static void Empty_ram_write(void *opaque, hwaddr offset, uint64_t value,
-                                   unsigned size)
-{   
-	qemu_log_mask(LOG_UNIMP,
-                      "Empty_ram_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
-}
-
-static const MemoryRegionOps Empty_ram_ops = {
-    .read = Empty_ram_read, 
-    .write = Empty_ram_write,
-    .endianness = DEVICE_NATIVE_ENDIAN,
-};
-
-
-#define Empty_ram(obj) \
-    OBJECT_CHECK(Empty_ram_state, (obj), "Empty_ram")
-
-
-
-static void Empty_ram_realize(DeviceState *dev, Error **errp)
-{
-    Empty_ram_state *s = Empty_ram(dev);
-
-    if (s->size == 0) {
-        error_setg(errp, "property 'size' not specified or zero");
-        return;
-    }
-
-    memory_region_init_io(&s->iomem, OBJECT(s), &Empty_ram_ops, s,
-                          "Empty_ram", s->size);
-    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
-}
-
-static Property Empty_ram_properties[] = {
-    DEFINE_PROP_UINT64("size", Empty_ram_state, size, 0),
-    DEFINE_PROP_END_OF_LIST(),
-};
-
-
-static void Empty_ram_class_init(ObjectClass *klass, void *data)
-{
-    DeviceClass *dc = DEVICE_CLASS(klass);
-
-    dc->realize = Empty_ram_realize;
-    dc->props = Empty_ram_properties;
-}
-
-
-static const TypeInfo Empty_ram_info = {
-    .name          = "Empty_ram",
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(Empty_ram_state),
-    .class_init    = Empty_ram_class_init, 
-};
-
-static void Empty_ram_register_types(void)
-{
-    type_register_static(&Empty_ram_info);
-}
-
-type_init(Empty_ram_register_types)
-
-
-
-
-
-
 
 //FLASH section
 
@@ -322,3 +237,88 @@ static void SensortagFCFG_register_types(void)
 
 type_init(SensortagFCFG_register_types)
 
+
+
+/*
+//Empty ram section
+
+
+typedef struct Empty_ram_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section transfered from CC26xx.c
+} Empty_ram_state;
+
+static uint64_t Empty_ram_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+
+    qemu_log_mask(LOG_UNIMP,
+                      "Empty_ram_read_unimplemented: Bad offset %x\n", (int)offset);
+    return 0x0;
+}
+
+static void Empty_ram_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+    qemu_log_mask(LOG_UNIMP,
+                      "Empty_ram_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+}
+
+static const MemoryRegionOps Empty_ram_ops = {
+    .read = Empty_ram_read, 
+    .write = Empty_ram_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+
+#define Empty_ram(obj) \
+    OBJECT_CHECK(Empty_ram_state, (obj), "Empty_ram")
+
+
+
+static void Empty_ram_realize(DeviceState *dev, Error **errp)
+{
+    Empty_ram_state *s = Empty_ram(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &Empty_ram_ops, s,
+                          "Empty_ram", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+}
+
+static Property Empty_ram_properties[] = {
+    DEFINE_PROP_UINT64("size", Empty_ram_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void Empty_ram_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = Empty_ram_realize;
+    dc->props = Empty_ram_properties;
+}
+
+
+static const TypeInfo Empty_ram_info = {
+    .name          = "Empty_ram",
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(Empty_ram_state),
+    .class_init    = Empty_ram_class_init, 
+};
+
+static void Empty_ram_register_types(void)
+{
+    type_register_static(&Empty_ram_info);
+}
+
+type_init(Empty_ram_register_types)
+
+
+*/

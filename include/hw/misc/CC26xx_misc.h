@@ -48,6 +48,7 @@ static inline DeviceState *Dummydevice_create(const char * name, hwaddr addr,hwa
 // this create and init a device called "SensortagFCFG" and transfer the property size to it. 
 // the implementation of the device is located at CC26xx_misc.c.
 
+/*
 static inline DeviceState *create_empty_ram(const char * name, hwaddr addr,hwaddr size)
 {
     DeviceState *dev;
@@ -59,8 +60,9 @@ static inline DeviceState *create_empty_ram(const char * name, hwaddr addr,hwadd
     //so here realize the property in the SensortagFCFG_state(device's state)
     qdev_init_nofail(dev);
     sysbus_mmio_map_overlap(s, 0, addr, -1000);// set up the mmio base and may set its priority if needed by add fouth argument
-
+	//sysbus_mmio_map(s, 0, addr);// this is default priority 0
     return dev;
 }
+*/
 
 #endif
