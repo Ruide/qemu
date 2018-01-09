@@ -209,7 +209,9 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     Dummydevice_create("SensortagFLASH",0x40030000, 0x4000);
     //    create_empty_ram("Empty_ram",0x, 0x00010000);
     //    create_unimplemented_device("AUX_WUC", 0x400C6000, 0x1000); AUX Wake-up Controller
-    Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);
+    Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);// 0x43220294 to ?? need to test
+    // 0x43220294 - 0x42000000 = 0x1220294, 0x1220294/0x20 = 0x91014 .... 0x14 //32bit to 1bit map. 0x20 = 32.
+    // 0x40091014 is AON_WUC_PWRSTAT = 0x0394707E
     //    create_unimplemented_device("PRCM", 0x40082000, 0x1000); Power, Clock, and Reset Management
     Dummydevice_create("SensortagPRCM",0x40082000, 0x1000);
     //    create_unimplemented_device("VIMS", 0x40034000, 0xC000); Versatile Instruction Memory System Control
@@ -217,7 +219,9 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     //    create_unimplemented_device("CCFG", 0x50003000, 0x1000);
     Dummydevice_create("SensortagCCFG",0x50003000, 0x1000);
     //     create_unimplemented_device("AON_IOC", 0x40094000, 0x1000); Always-On Input/Output Controller
-    //Dummydevice_create("SensortagAON_IOC",0x40094000, 0x1000);
+    Dummydevice_create("SensortagAON_IOC",0x40094000, 0x1000);
+    //    create_unimplemented_device("AON_SYSCTL", 0x40090000, 0x1000); Always-On System Control
+    Dummydevice_create("SensortagAON_SYSCTL",0x40090000, 0x1000);
 
 
     /* 2 bit-banding regions of memory (to avoid read-modify-write(which is effected by interrupt))
@@ -265,8 +269,6 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     create_unimplemented_device("IOC", 0x40081000, 0x1000);
     create_unimplemented_device("EVENT", 0x40083000, 0x1000);
     create_unimplemented_device("SMPH", 0x40084000, 0xC000);
-    create_unimplemented_device("AON_SYSCTL", 0x40090000, 0x1000);
-    create_unimplemented_device("AON_WUC", 0x40091000, 0x1000);
     create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
     create_unimplemented_device("AON_EVENT", 0x40093000, 0x1000);
     create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); 

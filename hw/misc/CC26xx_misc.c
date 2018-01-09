@@ -24,7 +24,316 @@
 */
 
 
+
+
+//AON_SYSCTL section 0x40090000
+
+
+
+typedef struct SensortagAON_SYSCTL_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
+    uint64_t SLEEPCTL;
+} SensortagAON_SYSCTL_state;
+
+static uint64_t SensortagAON_SYSCTL_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+    //uint64_t r;
+    SensortagAON_SYSCTL_state *s = (SensortagAON_SYSCTL_state *)opaque;
+
+    switch(offset){
+    case 0x8:
+        return s->SLEEPCTL;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "SensortagAON_SYSCTL_read_unimplemented: Bad offset %x\n", (int)offset);
+        return 0x0;
+    }
+}
+
+static void SensortagAON_SYSCTL_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+    SensortagAON_SYSCTL_state *s = (SensortagAON_SYSCTL_state *)opaque;
+    switch(offset){
+    case 0x8:
+        s->SLEEPCTL = value;
+        break;
+    default:
+    qemu_log_mask(LOG_UNIMP,
+                      "SensortagAON_SYSCTL_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+    }
+}
+
+static const MemoryRegionOps SensortagAON_SYSCTL_ops = {
+    .read = SensortagAON_SYSCTL_read, 
+    .write = SensortagAON_SYSCTL_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+#define Type_SensortagAON_SYSCTL "SensortagAON_SYSCTL"
+
+#define SensortagAON_SYSCTL(obj) \
+    OBJECT_CHECK(SensortagAON_SYSCTL_state, (obj), Type_SensortagAON_SYSCTL)
+
+
+
+static void SensortagAON_SYSCTL_realize(DeviceState *dev, Error **errp)
+{
+    SensortagAON_SYSCTL_state *s = SensortagAON_SYSCTL(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &SensortagAON_SYSCTL_ops, s,
+                          "AON_SYSCTL", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+    s->SLEEPCTL = 0x1;
+}
+
+static Property SensortagAON_SYSCTL_properties[] = {
+    DEFINE_PROP_UINT64("size", SensortagAON_SYSCTL_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void SensortagAON_SYSCTL_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = SensortagAON_SYSCTL_realize;// realize is instanciate?, similar func as add a .instance_init. in Typeinfo
+    dc->props = SensortagAON_SYSCTL_properties;
+
+}
+
+
+static const TypeInfo SensortagAON_SYSCTL_info = {
+    .name          = Type_SensortagAON_SYSCTL,
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(SensortagAON_SYSCTL_state),
+    .class_init    = SensortagAON_SYSCTL_class_init, 
+};
+
+static void SensortagAON_SYSCTL_register_types(void)
+{
+    type_register_static(&SensortagAON_SYSCTL_info);
+}
+
+type_init(SensortagAON_SYSCTL_register_types)
+
+
+
 //AON_IOC section 0x40094000
+
+
+typedef struct SensortagAON_IOC_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
+    uint64_t IOCLATCH;
+} SensortagAON_IOC_state;
+
+static uint64_t SensortagAON_IOC_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+    //uint64_t r;
+    SensortagAON_IOC_state *s = (SensortagAON_IOC_state *)opaque;
+
+    switch(offset){
+    case 0xc:
+        return s->IOCLATCH;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "SensortagAON_IOC_read_unimplemented: Bad offset %x\n", (int)offset);
+        return 0x0;
+    }
+}
+
+static void SensortagAON_IOC_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+    SensortagAON_IOC_state *s = (SensortagAON_IOC_state *)opaque;
+    switch(offset){
+    case 0xc:
+        s->IOCLATCH = value;
+        break;
+    default:
+    qemu_log_mask(LOG_UNIMP,
+                      "SensortagAON_IOC_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+    }
+}
+
+static const MemoryRegionOps SensortagAON_IOC_ops = {
+    .read = SensortagAON_IOC_read, 
+    .write = SensortagAON_IOC_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+#define Type_SensortagAON_IOC "SensortagAON_IOC"
+
+#define SensortagAON_IOC(obj) \
+    OBJECT_CHECK(SensortagAON_IOC_state, (obj), Type_SensortagAON_IOC)
+
+
+
+static void SensortagAON_IOC_realize(DeviceState *dev, Error **errp)
+{
+    SensortagAON_IOC_state *s = SensortagAON_IOC(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &SensortagAON_IOC_ops, s,
+                          "AON_IOC", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+    s->IOCLATCH = 0x1;
+}
+
+static Property SensortagAON_IOC_properties[] = {
+    DEFINE_PROP_UINT64("size", SensortagAON_IOC_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void SensortagAON_IOC_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = SensortagAON_IOC_realize;// realize is instanciate?, similar func as add a .instance_init. in Typeinfo
+    dc->props = SensortagAON_IOC_properties;
+
+}
+
+
+static const TypeInfo SensortagAON_IOC_info = {
+    .name          = Type_SensortagAON_IOC,
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(SensortagAON_IOC_state),
+    .class_init    = SensortagAON_IOC_class_init, 
+};
+
+static void SensortagAON_IOC_register_types(void)
+{
+    type_register_static(&SensortagAON_IOC_info);
+}
+
+type_init(SensortagAON_IOC_register_types)
+
+
+
+
+//FLASH section 0x40030000
+
+
+
+typedef struct SensortagFLASH_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
+    uint64_t CFG;
+    uint64_t FPAC1;
+} SensortagFLASH_state;
+
+static uint64_t SensortagFLASH_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+    //uint64_t r;
+    SensortagFLASH_state *s = (SensortagFLASH_state *)opaque;
+
+    switch(offset){
+    case 0x24:
+        return s->CFG;
+    case 0x2048:
+        return s->FPAC1;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "SensortagFLASH_read_unimplemented: Bad offset %x\n", (int)offset);
+        return 0x0;
+    }
+}
+
+static void SensortagFLASH_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+    SensortagFLASH_state *s = (SensortagFLASH_state *)opaque;
+    switch(offset){
+    case 0x24:
+        s->CFG = value;
+        break;
+    case 0x2048:
+        s->FPAC1 = value;
+        break;
+    default:
+    qemu_log_mask(LOG_UNIMP,
+                      "SensortagFLASH_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+    }
+}
+
+static const MemoryRegionOps SensortagFLASH_ops = {
+    .read = SensortagFLASH_read, 
+    .write = SensortagFLASH_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+#define Type_SensortagFLASH "SensortagFLASH"
+
+#define SensortagFLASH(obj) \
+    OBJECT_CHECK(SensortagFLASH_state, (obj), Type_SensortagFLASH)
+
+
+
+static void SensortagFLASH_realize(DeviceState *dev, Error **errp)
+{
+    SensortagFLASH_state *s = SensortagFLASH(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &SensortagFLASH_ops, s,
+                          "FLASH", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+    s->CFG = 0x80000125;
+    s->FPAC1 = 0x01392081;
+}
+
+static Property SensortagFLASH_properties[] = {
+    DEFINE_PROP_UINT64("size", SensortagFLASH_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void SensortagFLASH_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = SensortagFLASH_realize;// realize is instanciate?, similar func as add a .instance_init. in Typeinfo
+    dc->props = SensortagFLASH_properties;
+
+}
+
+
+static const TypeInfo SensortagFLASH_info = {
+    .name          = Type_SensortagFLASH,
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(SensortagFLASH_state),
+    .class_init    = SensortagFLASH_class_init, 
+};
+
+static void SensortagFLASH_register_types(void)
+{
+    type_register_static(&SensortagFLASH_info);
+}
+
+type_init(SensortagFLASH_register_types)
+
 
 
 
@@ -238,109 +547,6 @@ type_init(SensortagVIMS_register_types)
 
 
 
-
-//FLASH section 0x40030000
-
-
-
-typedef struct SensortagFLASH_state {
-    SysBusDevice parent_obj;
-    MemoryRegion iomem;
-    uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
-    uint64_t CFG;
-} SensortagFLASH_state;
-
-static uint64_t SensortagFLASH_read(void *opaque, hwaddr offset,
-                                   unsigned size)
-{    
-    //uint64_t r;
-    SensortagFLASH_state *s = (SensortagFLASH_state *)opaque;
-
-    switch(offset){
-    case 0x24:
-        return s->CFG;
-    default:
-        qemu_log_mask(LOG_UNIMP,
-                      "SensortagFLASH_read_unimplemented: Bad offset %x\n", (int)offset);
-        return 0x0;
-    }
-}
-
-static void SensortagFLASH_write(void *opaque, hwaddr offset, uint64_t value,
-                                   unsigned size)
-{   
-    SensortagFLASH_state *s = (SensortagFLASH_state *)opaque;
-    switch(offset){
-    case 0x24:
-        s->CFG = value;
-        break;
-    default:
-    qemu_log_mask(LOG_UNIMP,
-                      "SensortagFLASH_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
-    }
-}
-
-static const MemoryRegionOps SensortagFLASH_ops = {
-    .read = SensortagFLASH_read, 
-    .write = SensortagFLASH_write,
-    .endianness = DEVICE_NATIVE_ENDIAN,
-};
-
-#define Type_SensortagFLASH "SensortagFLASH"
-
-#define SensortagFLASH(obj) \
-    OBJECT_CHECK(SensortagFLASH_state, (obj), Type_SensortagFLASH)
-
-
-
-static void SensortagFLASH_realize(DeviceState *dev, Error **errp)
-{
-    SensortagFLASH_state *s = SensortagFLASH(dev);
-
-    if (s->size == 0) {
-        error_setg(errp, "property 'size' not specified or zero");
-        return;
-    }
-
-    memory_region_init_io(&s->iomem, OBJECT(s), &SensortagFLASH_ops, s,
-                          "FLASH", s->size);
-    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
-    s->CFG = 0x80000125;
-}
-
-static Property SensortagFLASH_properties[] = {
-    DEFINE_PROP_UINT64("size", SensortagFLASH_state, size, 0),
-    DEFINE_PROP_END_OF_LIST(),
-};
-
-
-static void SensortagFLASH_class_init(ObjectClass *klass, void *data)
-{
-    DeviceClass *dc = DEVICE_CLASS(klass);
-
-    dc->realize = SensortagFLASH_realize;// realize is instanciate?, similar func as add a .instance_init. in Typeinfo
-    dc->props = SensortagFLASH_properties;
-
-}
-
-
-static const TypeInfo SensortagFLASH_info = {
-    .name          = Type_SensortagFLASH,
-    .parent        = TYPE_SYS_BUS_DEVICE,
-    .instance_size = sizeof(SensortagFLASH_state),
-    .class_init    = SensortagFLASH_class_init, 
-};
-
-static void SensortagFLASH_register_types(void)
-{
-    type_register_static(&SensortagFLASH_info);
-}
-
-type_init(SensortagFLASH_register_types)
-
-
-
-
 //PRCM section 0x40082000
 
 
@@ -349,6 +555,7 @@ typedef struct SensortagPRCM_state {
     MemoryRegion iomem;
     uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
     uint64_t WARMRESET;
+    uint64_t PDCTL1VIMS;    
 } SensortagPRCM_state;
 
 static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
@@ -360,6 +567,8 @@ static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
     switch(offset){
     case 0x110:
         return s->WARMRESET;
+    case 0x18c:
+        return s->PDCTL1VIMS;
     default:
         qemu_log_mask(LOG_UNIMP,
                       "SensortagPRCM_read_unimplemented: Bad offset %x\n", (int)offset);
@@ -374,6 +583,9 @@ static void SensortagPRCM_write(void *opaque, hwaddr offset, uint64_t value,
     switch(offset){
     case 0x110:
         s->WARMRESET = value;
+        break;
+    case 0x18c:
+        s->PDCTL1VIMS = value;
         break;
     default:
     qemu_log_mask(LOG_UNIMP,
@@ -407,6 +619,7 @@ static void SensortagPRCM_realize(DeviceState *dev, Error **errp)
                           "PRCM", s->size);
     sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
     s->WARMRESET = 0x4;
+    s->PDCTL1VIMS = 0x0;
 }
 
 static Property SensortagPRCM_properties[] = {
@@ -447,7 +660,11 @@ typedef struct SensortagAUX_WUC_state {
     SysBusDevice parent_obj;
     MemoryRegion iomem;
     uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
-    uint64_t MODCLKEN1;
+    uint64_t MODCLKEN1;// 0x5c
+    uint64_t PWROFFREQ;// 0x4
+    uint64_t PWRDWNREQ;// 0x8
+    uint64_t CLKLFREQ;// 0x10
+    uint64_t CLKLFACK;// 0x14
 } SensortagAUX_WUC_state;
 
 static uint64_t SensortagAUX_WUC_read(void *opaque, hwaddr offset,
@@ -457,6 +674,15 @@ static uint64_t SensortagAUX_WUC_read(void *opaque, hwaddr offset,
     SensortagAUX_WUC_state *s = (SensortagAUX_WUC_state *)opaque;
 
     switch(offset){
+    case 0x4:
+        return s->PWROFFREQ;
+    case 0x8:
+        return s->PWRDWNREQ;
+    case 0x10:
+        return s->CLKLFREQ;
+    case 0x14:
+        return s->CLKLFACK;
+
     case 0x5c:
         return s->MODCLKEN1;
     default:
@@ -471,6 +697,27 @@ static void SensortagAUX_WUC_write(void *opaque, hwaddr offset, uint64_t value,
 {   
     SensortagAUX_WUC_state *s = (SensortagAUX_WUC_state *)opaque;
     switch(offset){
+    case 0x4:
+        s->PWROFFREQ = value;
+        break;
+    case 0x8:
+        s->PWRDWNREQ = value;
+        break;
+    case 0x10:
+        s->CLKLFREQ = value;
+        qemu_log_mask(LOG_UNIMP,
+                      "************hey,did set offset %x Write value %x\n", (int)offset,(int)value);
+        s->CLKLFACK = 0x1; 
+        /*  17.6.1.1 Active Mode
+        1. Set the AUX_WUC:CLKLFREQ.REQ register high.
+        2. Wait for the AUX_WUC:CLKLFACK.ACK register to go high.
+        3. Set the AUX_WUC:CLKLFREQ.REQ register low.
+        4. Wait for the AUX_WUC:CLKLFACK.ACK register to go low.
+        */ 
+        break;
+    case 0x14:
+        s->CLKLFACK = value;
+        break;
     case 0x5c:
         s->MODCLKEN1 = value;
         break;
