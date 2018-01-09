@@ -192,13 +192,32 @@ a pointer to the allocated memory, cast to a pointer to struct_type
 
     static const int uart_irq[] = {5};
 
+
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
     SensortagFCFG_create(0x50001000, 0x2000);
-    //create_unimplemented_device("FLASH", 0x40030000, 0x4000);
-    Dummydevice_create("SensortagFLASH",0x40030000, 0x4000);
-    //create_empty_ram("Empty_ram",0x, 0x00010000);
 
+/*steps adding dummy device:
+1. in CC26xx.c    Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);
+2.1 in CC26xx_misc.c copy a section to top (e.g FLASH)
+2.2 ctl + h, replace FLASH with AUX_WUC
+2.3 replace member in SensortagFLASHState with new ones
+2.4 modify offset in read and write function
+*/
+
+    //    create_unimplemented_device("FLASH", 0x40030000, 0x4000);
+    Dummydevice_create("SensortagFLASH",0x40030000, 0x4000);
+    //    create_empty_ram("Empty_ram",0x, 0x00010000);
+    //    create_unimplemented_device("AUX_WUC", 0x400C6000, 0x1000); AUX Wake-up Controller
+    Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);
+    //    create_unimplemented_device("PRCM", 0x40082000, 0x1000); Power, Clock, and Reset Management
+    Dummydevice_create("SensortagPRCM",0x40082000, 0x1000);
+    //    create_unimplemented_device("VIMS", 0x40034000, 0xC000); Versatile Instruction Memory System Control
+    Dummydevice_create("SensortagVIMS",0x40034000, 0xC000);
+    //    create_unimplemented_device("CCFG", 0x50003000, 0x1000);
+    Dummydevice_create("SensortagCCFG",0x50003000, 0x1000);
+    //     create_unimplemented_device("AON_IOC", 0x40094000, 0x1000); Always-On Input/Output Controller
+    //Dummydevice_create("SensortagAON_IOC",0x40094000, 0x1000);
 
 
     /* 2 bit-banding regions of memory (to avoid read-modify-write(which is effected by interrupt))
@@ -207,10 +226,12 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     
     0x20000000 ==> Base address of SRAM
     0x22000000 ==> Base address of SRAM alias region
+    (0x22000000 ~ 0x220FFFFF)
 
     0x40000000 ==> Base address of peripheral region
     0x42000000 ==> Base address of peripheral alias region
-
+    (0x42000000 ~ 0x43FFFFFF)
+    
     so, write to a 32bit value in memory address in bit-banding alias region is equal to write a 1bit value in bit-banding region.
     
     e.g. 0x42600484 mapped to 0x40030024
@@ -237,26 +258,22 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     create_unimplemented_device("GPIO", 0x40022000, 0x2000);
     create_unimplemented_device("CRYPTO", 0x40024000, 0x4000);
     create_unimplemented_device("TRNG", 0x40028000, 0x8000);
-    create_unimplemented_device("VIMS", 0x40034000, 0xC000);
     create_unimplemented_device("RF-core-PWR", 0x40040000, 0x1000);
     create_unimplemented_device("RF-core-DBELL", 0x40041000, 0x2000);
     create_unimplemented_device("RF-core-RAT", 0x40043000, 0x3D000);
     create_unimplemented_device("WDT", 0x40080000, 0x1000);
     create_unimplemented_device("IOC", 0x40081000, 0x1000);
-    create_unimplemented_device("PRCM", 0x40082000, 0x1000);
     create_unimplemented_device("EVENT", 0x40083000, 0x1000);
     create_unimplemented_device("SMPH", 0x40084000, 0xC000);
     create_unimplemented_device("AON_SYSCTL", 0x40090000, 0x1000);
     create_unimplemented_device("AON_WUC", 0x40091000, 0x1000);
     create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
     create_unimplemented_device("AON_EVENT", 0x40093000, 0x1000);
-    create_unimplemented_device("AON_IOC", 0x40094000, 0x1000);
     create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); 
     create_unimplemented_device("AUX_AIODIO-0", 0x400C1000, 0x1000);
     create_unimplemented_device("AUX_AIODIO-1", 0x400C2000, 0x2000);
     create_unimplemented_device("AUX_TDCIF", 0x400C4000, 0x1000);
     create_unimplemented_device("AUX_EVCTL", 0x400C5000, 0x1000);
-    create_unimplemented_device("AUX_WUC", 0x400C6000, 0x1000);
     create_unimplemented_device("AUX_TIMER", 0x400C7000, 0x1000);
     create_unimplemented_device("AUX_SMPH", 0x400C8000, 0x1000);
     create_unimplemented_device("AUX_ANAIF", 0x400C9000, 0x1000);
@@ -264,7 +281,6 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     create_unimplemented_device("AUX_ADI4", 0x400CB000, 0x15000);
     create_unimplemented_device("AUX_RAM", 0x400E0000, 0x1000);
     create_unimplemented_device("AUX_SCE", 0x400E1000, 0xFF20000);
-    create_unimplemented_device("CCFG", 0x50003000, 0x8FFFD000);
     create_unimplemented_device("CPU_ITM", 0xE0000000, 0x1000);
     create_unimplemented_device("CPU_DWT", 0xE0001000, 0x1000);
     create_unimplemented_device("CPU_FPB", 0xE0002000, 0xC000);
