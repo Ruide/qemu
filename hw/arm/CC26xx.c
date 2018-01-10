@@ -222,6 +222,16 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     Dummydevice_create("SensortagAON_IOC",0x40094000, 0x1000);
     //    create_unimplemented_device("AON_SYSCTL", 0x40090000, 0x1000); Always-On System Control
     Dummydevice_create("SensortagAON_SYSCTL",0x40090000, 0x1000);
+    //    create_unimplemented_device("AON_WUC", 0x40091000, 0x1000); Always-On Wake-up Controller
+    Dummydevice_create("SensortagAON_WUC",0x40091000, 0x1000);
+    //    create_unimplemented_device("AUX_SMPH", 0x400C8000, 0x1000); AUX Semaphores
+    Dummydevice_create("SensortagAUX_SMPH",0x400C8000, 0x1000);
+    //    create_unimplemented_device("SMPH", 0x40084000, 0xC000); System CPU Semaphores
+    Dummydevice_create("SensortagSMPH",0x40084000, 0xC000);
+    //    create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); Always-On Battery and Temperature Monitor 
+    Dummydevice_create("SensortagAON_BATMON",0x40095000, 0x2C000);
+    
+    
 
 
     /* 2 bit-banding regions of memory (to avoid read-modify-write(which is effected by interrupt))
@@ -268,16 +278,13 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     create_unimplemented_device("WDT", 0x40080000, 0x1000);
     create_unimplemented_device("IOC", 0x40081000, 0x1000);
     create_unimplemented_device("EVENT", 0x40083000, 0x1000);
-    create_unimplemented_device("SMPH", 0x40084000, 0xC000);
     create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
     create_unimplemented_device("AON_EVENT", 0x40093000, 0x1000);
-    create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); 
     create_unimplemented_device("AUX_AIODIO-0", 0x400C1000, 0x1000);
     create_unimplemented_device("AUX_AIODIO-1", 0x400C2000, 0x2000);
     create_unimplemented_device("AUX_TDCIF", 0x400C4000, 0x1000);
     create_unimplemented_device("AUX_EVCTL", 0x400C5000, 0x1000);
     create_unimplemented_device("AUX_TIMER", 0x400C7000, 0x1000);
-    create_unimplemented_device("AUX_SMPH", 0x400C8000, 0x1000);
     create_unimplemented_device("AUX_ANAIF", 0x400C9000, 0x1000);
     create_unimplemented_device("AUX_DDI0_OSC", 0x400CA000, 0x1000);
     create_unimplemented_device("AUX_ADI4", 0x400CB000, 0x15000);

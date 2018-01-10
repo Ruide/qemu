@@ -1,1 +1,1 @@
-#define QEMU_PKGVERSION " (v2.11.0-371-gb7c1297-dirty)"
+#define QEMU_PKGVERSION " (v2.11.0-372-ga9b5d10-dirty)"
