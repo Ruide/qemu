@@ -25,6 +25,163 @@
 
 
 
+//SensortagAUX_DDI0_OSC section 0x400CA000
+
+
+
+typedef struct SensortagAUX_DDI0_OSC_state {
+    SysBusDevice parent_obj;
+    MemoryRegion iomem;
+    uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
+    uint64_t OSC_AMPCOMPCTL; //0xc
+    uint64_t OSC_AMPCOMPTH1; // 0x10
+    uint64_t OSC_AMPCOMPTH2; // 0x14
+    uint64_t OSC_ANABYPASSVAL1; // 0x18
+    uint64_t OSC_ANABYPASSVAL2; // 0x1c
+    uint64_t OSC_XOSCHFCTL;// 0x28
+    uint64_t aux; //0x258
+    uint64_t aux0; //0x141
+    uint64_t aux1; //0x149
+    uint64_t aux2; //0x14c
+} SensortagAUX_DDI0_OSC_state;
+
+static uint64_t SensortagAUX_DDI0_OSC_read(void *opaque, hwaddr offset,
+                                   unsigned size)
+{    
+    //uint64_t r;
+    SensortagAUX_DDI0_OSC_state *s = (SensortagAUX_DDI0_OSC_state *)opaque;
+
+    switch(offset){
+    case 0xc:
+        return s->OSC_AMPCOMPCTL;
+    case 0x10:
+        return s->OSC_AMPCOMPTH1;
+    case 0x14:
+        return s->OSC_AMPCOMPTH2;
+    case 0x18:
+        return s->OSC_ANABYPASSVAL1;
+    case 0x1c:
+        return s->OSC_ANABYPASSVAL2;
+    case 0x28:
+        return s->OSC_XOSCHFCTL;
+    case 0x141:
+        return s->aux0;
+    case 0x149:
+        return s->aux1;
+    case 0x14c:
+        return s->aux2;
+    case 0x258:
+        return s->aux;
+    default:
+        qemu_log_mask(LOG_UNIMP,
+                      "SensortagAUX_DDI0_OSC_read_unimplemented: Bad offset %x\n", (int)offset);
+        return 0x0;
+    }
+}
+
+static void SensortagAUX_DDI0_OSC_write(void *opaque, hwaddr offset, uint64_t value,
+                                   unsigned size)
+{   
+    SensortagAUX_DDI0_OSC_state *s = (SensortagAUX_DDI0_OSC_state *)opaque;
+    switch(offset){
+    case 0xc:
+        s->OSC_AMPCOMPCTL = value;
+        break;
+    case 0x10:
+        s->OSC_AMPCOMPTH1 = value;
+        break;
+    case 0x14:
+        s->OSC_AMPCOMPTH2 = value;
+        break;
+    case 0x18:
+        s->OSC_ANABYPASSVAL1 = value;
+        break;
+    case 0x1c:
+        s->OSC_ANABYPASSVAL2 = value;
+        break;
+    case 0x28:
+        s->OSC_XOSCHFCTL = value;
+        break;
+    case 0x141:
+        s->aux0 = value;
+        break;
+    case 0x149:
+        s->aux1 = value;
+        break;
+    case 0x14c:
+        s->aux2 = value;
+        break;
+    case 0x258:
+        s->aux = value;
+        break;
+    default:
+    //qemu_log_mask(LOG_UNIMP,
+    //                  "SensortagAUX_DDI0_OSC_write_unimplemented: Bad offset %x Write value %x\n", (int)offset,(int)value);
+    qemu_log_mask(LOG_UNIMP,
+                      "SensortagAUX_DDI0_OSC: Bad offset %x xie value %x\n", (int)offset,(int)value);
+    }
+}
+
+static const MemoryRegionOps SensortagAUX_DDI0_OSC_ops = {
+    .read = SensortagAUX_DDI0_OSC_read, 
+    .write = SensortagAUX_DDI0_OSC_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+#define Type_SensortagAUX_DDI0_OSC "SensortagAUX_DDI0_OSC"
+
+#define SensortagAUX_DDI0_OSC(obj) \
+    OBJECT_CHECK(SensortagAUX_DDI0_OSC_state, (obj), Type_SensortagAUX_DDI0_OSC)
+
+
+
+static void SensortagAUX_DDI0_OSC_realize(DeviceState *dev, Error **errp)
+{
+    SensortagAUX_DDI0_OSC_state *s = SensortagAUX_DDI0_OSC(dev);
+
+    if (s->size == 0) {
+        error_setg(errp, "property 'size' not specified or zero");
+        return;
+    }
+
+    memory_region_init_io(&s->iomem, OBJECT(s), &SensortagAUX_DDI0_OSC_ops, s,
+                          "AUX_DDI0_OSC", s->size);
+    sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
+    s->OSC_ANABYPASSVAL1 = 0xF003F;
+}
+
+static Property SensortagAUX_DDI0_OSC_properties[] = {
+    DEFINE_PROP_UINT64("size", SensortagAUX_DDI0_OSC_state, size, 0),
+    DEFINE_PROP_END_OF_LIST(),
+};
+
+
+static void SensortagAUX_DDI0_OSC_class_init(ObjectClass *klass, void *data)
+{
+    DeviceClass *dc = DEVICE_CLASS(klass);
+
+    dc->realize = SensortagAUX_DDI0_OSC_realize;// realize is instanciate?, similar func as add a .instance_init. in Typeinfo
+    dc->props = SensortagAUX_DDI0_OSC_properties;
+
+}
+
+
+static const TypeInfo SensortagAUX_DDI0_OSC_info = {
+    .name          = Type_SensortagAUX_DDI0_OSC,
+    .parent        = TYPE_SYS_BUS_DEVICE,
+    .instance_size = sizeof(SensortagAUX_DDI0_OSC_state),
+    .class_init    = SensortagAUX_DDI0_OSC_class_init, 
+};
+
+static void SensortagAUX_DDI0_OSC_register_types(void)
+{
+    type_register_static(&SensortagAUX_DDI0_OSC_info);
+}
+
+type_init(SensortagAUX_DDI0_OSC_register_types)
+
+
+
 //AON_BATMON section 0x40095000
 
 
@@ -242,7 +399,7 @@ typedef struct SensortagAUX_SMPH_state {
     SysBusDevice parent_obj;
     MemoryRegion iomem;
     uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
-    uint64_t SMPH0;
+    uint64_t SMPH0; // 
 } SensortagAUX_SMPH_state;
 
 static uint64_t SensortagAUX_SMPH_read(void *opaque, hwaddr offset,
@@ -300,7 +457,7 @@ static void SensortagAUX_SMPH_realize(DeviceState *dev, Error **errp)
     memory_region_init_io(&s->iomem, OBJECT(s), &SensortagAUX_SMPH_ops, s,
                           "AUX_SMPH", s->size);
     sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
-    s->SMPH0 = 0x0;
+    s->SMPH0 = 0x1;//1 means available, so init to 1 first
 }
 
 static Property SensortagAUX_SMPH_properties[] = {
@@ -1256,27 +1413,52 @@ static uint64_t SensortagFCFG_read(void *opaque, hwaddr offset,
  	case 0xA0:
     	r = 0xFFFFFF01;
        	return r;
+    case 0x2bc:
+        r = 0xF0FFF0FC;
+        return r;
+    case 0x314:
+        r = 0x02110210;
+        return r;
     case 0x318:
-    	r = 0x8B99A02F;
-       	return r;
+        r = 0x8B99A02F;
+        return r;
     case 0x2b8:
         r = 0xFAF8E0FB;
+        return r;
     case 0x350:
         r = 0xfc00ff5c;
+        return r;
     //case 0x31A:
     //	r = 0x102F;
     //	return r;
     case 0x31C:
-    	r = 0x00000025;
+        r = 0x25;
+        return r;
+    case 0x370:
+        r = 0xFF7B828E;
+        return r;
+    case 0x378:
+        r = 0xFF183F47;
+        return r;
+    case 0x37c:
+        r = 0xFFFFC3FF;
+        return r;
+    case 0x374:
+        r = 0x6B8B0303;
     	return r;
+    case 0x38c:
+        r = 0xF00E0018;
+        return r;
+    case 0x398:
+        r = 0xE00403F8;
+        return r;
+
     	// gdb read 0x31C and 0x31E seperately, and when call 0x31C it return 0x2 size uint,
     	// and 0x00000025 shrink to -> 0x0025, when call read 0x31E, nothing happen, bc no 
     	// callback funtion set up here. we could add case 0x31e if needed.
     	// ldr return 0x04 size uint. when call read 0x31C.
 //    case 0x31E:
 //    	r = 0x0025;
-
-    	return r;
 	default:
 		qemu_log_mask(LOG_UNIMP,
                       "SensortagFCFG_read_unimplemented: Bad offset %x\n", (int)offset);

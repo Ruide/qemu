@@ -230,7 +230,9 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     Dummydevice_create("SensortagSMPH",0x40084000, 0xC000);
     //    create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); Always-On Battery and Temperature Monitor 
     Dummydevice_create("SensortagAON_BATMON",0x40095000, 0x2C000);
-    
+    //    create_unimplemented_device("AUX_DDI0_OSC", 0x400CA000, 0x1000);
+    Dummydevice_create("SensortagAUX_DDI0_OSC",0x400CA000, 0x1000);
+
     
 
 
@@ -286,7 +288,6 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     create_unimplemented_device("AUX_EVCTL", 0x400C5000, 0x1000);
     create_unimplemented_device("AUX_TIMER", 0x400C7000, 0x1000);
     create_unimplemented_device("AUX_ANAIF", 0x400C9000, 0x1000);
-    create_unimplemented_device("AUX_DDI0_OSC", 0x400CA000, 0x1000);
     create_unimplemented_device("AUX_ADI4", 0x400CB000, 0x15000);
     create_unimplemented_device("AUX_RAM", 0x400E0000, 0x1000);
     create_unimplemented_device("AUX_SCE", 0x400E1000, 0xFF20000);
