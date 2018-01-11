@@ -333,6 +333,8 @@ static void CC26xx_machine_init(void)
 
 type_init(CC26xx_machine_init)
 
+
+
 /*Table 3-2. Memory Map
 cortex M3 memory map
 
@@ -390,9 +392,26 @@ cortex M3 memory map
 0xE004 0000 CPU_TPIU Cortex-M Trace Port Interface Unit
 */
 
+/* check /test_binaries/rtos_rom.map for more details.
+
+MEMORY CONFIGURATION
+
+         name            origin    length      used     unused   attr    fill
+----------------------  --------  ---------  --------  --------  ----  --------
+  VECS                  00000000   00000100  0000003c  000000c4  R  X
+  RTOS_FLASH            00000100   00000700  000004e0  00000220  R  X
+  FLASH                 00000800   0001f000  000014f0  0001db10  R  X
+  FLASH_CCFG            0001ffa8   00000058  00000058  00000000  R  X
+  RTOS_ROM              1001a000   00002c00  00002a92  0000016e  R  X
+  VRAM                  20000000   00000100  000000dc  00000024  RW X
+  RTOS_SRAM             20000100   00000500  00000104  000003fc  RW X
+  SRAM                  20000600   00004a00  00001c20  00002de0  RW X
 
 
-/**
+
+*/
+
+/*
  * DeviceState:
  * @realized: Indicates whether the device has been fully constructed.
  *
