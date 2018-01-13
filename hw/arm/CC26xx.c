@@ -89,6 +89,28 @@ static void do_sys_reset(void *opaque, int n, int level)
 
 static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
 {
+/*
+
+Q: What does the error message "Because this program contains initialised RAM data it
+may run successfully under Code Composer studio but not as a standalone system. If 
+your flash program requires initialised data in RAM, you will need to write Flash
+code to initialise Ram memory." mean and why does it occur?
+
+The error you have received is a result of the fact that your whole application is
+linked to RAM and not to flash memory. You need to check your linker command file
+to see if you really link sections to the flash memory.
+
+To be more elaborate, this appears each time you program the flash memory, if your 
+application has code in RAM, to remind you that having application code in RAM prevents
+your application from working as a standalone system. So you need modify your CMD file.
+
+Please refer to the application note SPRA958H (includes also code examples) to get an
+idea how to run an application from the DSP internal flash memory.
+
+
+*/
+
+
     /*Table 4-2. Interrupts*/
 /*
 /Vector Number/ /Interrupt Number(Bit in Interrupt Registers)/ /Vector Address or Offset/ /Description/
@@ -138,13 +160,17 @@ static void CC26xx_init(MachineState *ms, CC26xx_board_info *board)
 */
 
     int sram_size;
+    int sram_size1;
     int flash_size;
 
 /*g_new()
 #define g_new(struct_type, n_structs)
 
-Allocates n_structs elements of type struct_type . The returned pointer is cast to a pointer to the given type. If n_structs is 0 it returns NULL. Care is taken to avoid overflow when calculating the size of the allocated block.
-Since the returned pointer is already casted to the right type, it is normally unnecessary to cast it explicitly, and doing so might hide memory allocation errors.
+Allocates n_structs elements of type struct_type . The returned pointer is cast to a pointer to the
+ given type. If n_structs is 0 it returns NULL. Care is taken to avoid overflow when calculating the
+  size of the allocated block.
+Since the returned pointer is already casted to the right type, it is normally unnecessary to cast
+ it explicitly, and doing so might hide memory allocation errors.
 
 Parameters:
 struct_type: the type of the elements to allocate
@@ -157,6 +183,7 @@ a pointer to the allocated memory, cast to a pointer to struct_type
 */
 
     MemoryRegion *sram = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
+    MemoryRegion *sram1 = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
     MemoryRegion *flash = g_new(MemoryRegion, 1);
 
 /* Get the root memory region.  This interface should only be used temporarily
@@ -165,13 +192,66 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     MemoryRegion *system_memory = get_system_memory();
 
     // flash_size = 128 * 1024; // 0x1f + 1 = 0x20, 0x20 << 1 = 0x40, 0x40 * 0x400 = 0x2000
-    // sram_size = ((board->dc0 >> 18) + 1) * 1024;// 1024 <=> 0x400, 1fxxxx >> 18 = 7, 18 <=> 0x12, 7 <=> 0b111, 0x1f <=> 0b11111
+    // sram_size = ((board->dc0 >> 18) + 1) * 1024;// 1024 <=> 0x400, 1fxxxx >> 18 = 7, 18 <=> 0x12, 
+    //7 <=> 0b111, 0x1f <=> 0b11111
     // 0x(xxxx) <=> 16 bit 0b(x), 0x400 * 0x8 = 0x2000
     // LM3S6965 256kb flash 64kb sram
 
 	flash_size = 0x00020000; // 0x1ffff -> 0x20000 128kb, 0x0003ffff 256kb, 
     // 20000 hex Bytes = 131072 decimal Bytes = 128KiB decimal = 128 * 1024 decimal = > * 8 bits
-	sram_size = 0x00005000; // 0x4fff 20kb
+    sram_size = 0x00005000; // 0x4fff 20kb
+    //sram_size1 = 0x0001cc00; // 0x1cc00 ~110KB
+/*
+
+in this cc2650 sram: 2 sections
+
+0x10000000 -> 0x1001cbfe (0x1cbfe)  117758 Bytes (~120KB) may come from debugger?? idk...
+0x20000000 -> 0x20004ffe (0x4fff)    20478 Bytes (~20KB)
+
+FLASH: 
+
+0x0        -> 0x1ffff    (0x1ffff)  131071 Bytes (~128KB) 
+
+No.  Memory             Address       Type      Access Permissions  Size
+0    Flash              0x00000000    Normal    Full access, RO    512KB
+1    SRAM               0x10000000    Normal    Full access, RW     32KB
+2    SRAM               0x2007C000    Normal    Full access, RW     32KB
+3    GPIO               0x2009C000    Device    Full access, RW     16KB
+4    APB Peripherals    0x40000000    Device    Full access, RW    512KB
+5    AHB Peripherals    0x50000000    Device    Full access, RW      2MB
+6    PPB                0xE0000000    SO        Full access, RW      1MB
+
+*/
+
+
+/*
+    GEL_MapAddStr(0x00000000, 0, 0x00020000, "R", 0);               /* Flash 
+    GEL_MapAddStr(0x10000000, 0, 0x00020000, "R", 0);               /* ROM (internal rom)
+    GEL_MapAddStr(0x11000000, 0, 0x00002000, "R|W", 0);             /* GPRAM 
+    GEL_MapAddStr(0x20000000, 0, 0x00005000, "R|W", 0);             /* SRAM
+    GEL_MapAddStr(0x21000000, 0, 0x00001000, "R|W", 0);             /* RFC_SRAM
+    ...
+
+    see more details in cc26x0.gel
+
+*/
+
+/*
+    GEL_MapAddStr(0x40000000, 0, 0x000E1028, "R|W", 0);             /* Peripherals 
+    GEL_MapAddStr(0x40031000, 0, 0x00001000, "NONE", 0);            /* Protected 
+    GEL_MapAddStr(0x40092000, 0, 0x00000030, "R|W|RUN_NONE", 0);    /* AON_RTC, only read when halted
+    GEL_MapAddStr(0x50001000, 0, 0x00000400, "R", 0);               /* FCFG1 
+    GEL_MapAddStr(0x50002000, 0, 0x00000400, "R", 0);               /* FCFG2 
+    GEL_MapAddStr(0x50003000, 0, 0x00001000, "R", 0);               /* CCFG 
+    GEL_MapAddStr(0xE0000000, 0, 0x00003000, "R|W", 0);             /* CPU_ITM, CPU_DWT, CPU_FPB 
+    GEL_MapAddStr(0xE000E000, 0, 0x00001000, "R|W", 0);             /* CPU_SCS 
+    GEL_MapAddStr(0xE0040000, 0, 0x00001000, "R|W", 0);             /* CPU_TPIU 
+    GEL_MapAddStr(0xE00FE000, 0, 0x00001000, "R|W", 0);             /* CPU_TIPROP 
+
+
+*/
+
+
 
     /* Flash programming is done via the SCU, so pretend it is ROM.  */
     memory_region_init_ram(flash, NULL, "CC26xx.flash", flash_size,
@@ -182,6 +262,11 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     memory_region_init_ram(sram, NULL, "CC26xx.sram", sram_size,
                            &error_fatal);
     memory_region_add_subregion(system_memory, 0x20000000, sram);
+
+    memory_region_init_ram(sram1, NULL, "CC26xx.sram1", sram_size1,
+                           &error_fatal);
+    memory_region_add_subregion(system_memory, 0x10000000, sram1);
+
 
 	DeviceState *nvic;
     nvic = armv7m_init(system_memory, flash_size, NUM_IRQ_LINES,
@@ -210,11 +295,13 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     //    create_empty_ram("Empty_ram",0x, 0x00010000);
     //    create_unimplemented_device("AUX_WUC", 0x400C6000, 0x1000); AUX Wake-up Controller
     Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);// 0x43220294 to ?? need to test
-    // 0x43220294 - 0x42000000 = 0x1220294, 0x1220294/0x20 = 0x91014 .... 0x14 //32bit to 1bit map. 0x20 = 32.
+    // 0x43220294 - 0x42000000 = 0x1220294, 0x1220294/0x20 = 0x91014 .... 0x14 //32bit to 1bit map. 
+    //0x20 = 32.
     // 0x40091014 is AON_WUC_PWRSTAT = 0x0394707E
     //    create_unimplemented_device("PRCM", 0x40082000, 0x1000); Power, Clock, and Reset Management
     Dummydevice_create("SensortagPRCM",0x40082000, 0x1000);
-    //    create_unimplemented_device("VIMS", 0x40034000, 0xC000); Versatile Instruction Memory System Control
+    //    create_unimplemented_device("VIMS", 0x40034000, 0xC000); Versatile Instruction Memory System 
+    //Control
     Dummydevice_create("SensortagVIMS",0x40034000, 0xC000);
     //    create_unimplemented_device("CCFG", 0x50003000, 0x1000);
     Dummydevice_create("SensortagCCFG",0x50003000, 0x1000);
@@ -228,7 +315,8 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     Dummydevice_create("SensortagAUX_SMPH",0x400C8000, 0x1000);
     //    create_unimplemented_device("SMPH", 0x40084000, 0xC000); System CPU Semaphores
     Dummydevice_create("SensortagSMPH",0x40084000, 0xC000);
-    //    create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); Always-On Battery and Temperature Monitor 
+    //    create_unimplemented_device("AON_BATMON", 0x40095000, 0x2C000); Always-On Battery and Temperature 
+    //Monitor 
     Dummydevice_create("SensortagAON_BATMON",0x40095000, 0x2C000);
     //    create_unimplemented_device("AUX_DDI0_OSC", 0x400CA000, 0x1000);
     Dummydevice_create("SensortagAUX_DDI0_OSC",0x400CA000, 0x1000);
@@ -237,8 +325,10 @@ a pointer to the allocated memory, cast to a pointer to struct_type
 
 
     /* 2 bit-banding regions of memory (to avoid read-modify-write(which is effected by interrupt))
-    1. addresses from 0x22000000 to 0x220FFFFF are used for bit-banding the 32KB region from 0x20000000 to 0x20007FFF
-    2. addresses from 0x42000000 to 0x43FFFFFF are used for bit-banding the 1 MB region from 0x40000000 to 0x400FFFFF
+    1. addresses from 0x22000000 to 0x220FFFFF are used for bit-banding the 32KB region from 0x20000000 
+    to 0x20007FFF
+    2. addresses from 0x42000000 to 0x43FFFFFF are used for bit-banding the 1 MB region from 0x40000000 
+    to 0x400FFFFF
     
     0x20000000 ==> Base address of SRAM
     0x22000000 ==> Base address of SRAM alias region
@@ -248,7 +338,8 @@ a pointer to the allocated memory, cast to a pointer to struct_type
     0x42000000 ==> Base address of peripheral alias region
     (0x42000000 ~ 0x43FFFFFF)
     
-    so, write to a 32bit value in memory address in bit-banding alias region is equal to write a 1bit value in bit-banding region.
+    so, write to a 32bit value in memory address in bit-banding alias region is equal to write a 1bit
+     value in bit-banding region.
     
     e.g. 0x42600484 mapped to 0x40030024
     */
