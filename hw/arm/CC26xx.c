@@ -160,7 +160,6 @@ idea how to run an application from the DSP internal flash memory.
 */
 
     int sram_size;
-    int sram_size1;
     int flash_size;
 
 /*g_new()
@@ -183,7 +182,6 @@ a pointer to the allocated memory, cast to a pointer to struct_type
 */
 
     MemoryRegion *sram = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
-    MemoryRegion *sram1 = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
     MemoryRegion *flash = g_new(MemoryRegion, 1);
 
 /* Get the root memory region.  This interface should only be used temporarily
@@ -200,7 +198,7 @@ a pointer to the allocated memory, cast to a pointer to struct_type
 	flash_size = 0x00020000; // 0x1ffff -> 0x20000 128kb, 0x0003ffff 256kb, 
     // 20000 hex Bytes = 131072 decimal Bytes = 128KiB decimal = 128 * 1024 decimal = > * 8 bits
     sram_size = 0x00005000; // 0x4fff 20kb
-    //sram_size1 = 0x0001cc00; // 0x1cc00 ~110KB
+
 /*
 
 in this cc2650 sram: 2 sections
@@ -225,11 +223,11 @@ No.  Memory             Address       Type      Access Permissions  Size
 
 
 /*
-    GEL_MapAddStr(0x00000000, 0, 0x00020000, "R", 0);               /* Flash 
-    GEL_MapAddStr(0x10000000, 0, 0x00020000, "R", 0);               /* ROM (internal rom)
-    GEL_MapAddStr(0x11000000, 0, 0x00002000, "R|W", 0);             /* GPRAM 
-    GEL_MapAddStr(0x20000000, 0, 0x00005000, "R|W", 0);             /* SRAM
-    GEL_MapAddStr(0x21000000, 0, 0x00001000, "R|W", 0);             /* RFC_SRAM
+    GEL_MapAddStr(0x00000000, 0, 0x00020000, "R", 0);               * Flash 
+    GEL_MapAddStr(0x10000000, 0, 0x00020000, "R", 0);               * ROM (internal rom)
+    GEL_MapAddStr(0x11000000, 0, 0x00002000, "R|W", 0);             * GPRAM 
+    GEL_MapAddStr(0x20000000, 0, 0x00005000, "R|W", 0);             * SRAM
+    GEL_MapAddStr(0x21000000, 0, 0x00001000, "R|W", 0);             * RFC_SRAM
     ...
 
     see more details in cc26x0.gel
@@ -237,16 +235,16 @@ No.  Memory             Address       Type      Access Permissions  Size
 */
 
 /*
-    GEL_MapAddStr(0x40000000, 0, 0x000E1028, "R|W", 0);             /* Peripherals 
-    GEL_MapAddStr(0x40031000, 0, 0x00001000, "NONE", 0);            /* Protected 
-    GEL_MapAddStr(0x40092000, 0, 0x00000030, "R|W|RUN_NONE", 0);    /* AON_RTC, only read when halted
-    GEL_MapAddStr(0x50001000, 0, 0x00000400, "R", 0);               /* FCFG1 
-    GEL_MapAddStr(0x50002000, 0, 0x00000400, "R", 0);               /* FCFG2 
-    GEL_MapAddStr(0x50003000, 0, 0x00001000, "R", 0);               /* CCFG 
-    GEL_MapAddStr(0xE0000000, 0, 0x00003000, "R|W", 0);             /* CPU_ITM, CPU_DWT, CPU_FPB 
-    GEL_MapAddStr(0xE000E000, 0, 0x00001000, "R|W", 0);             /* CPU_SCS 
-    GEL_MapAddStr(0xE0040000, 0, 0x00001000, "R|W", 0);             /* CPU_TPIU 
-    GEL_MapAddStr(0xE00FE000, 0, 0x00001000, "R|W", 0);             /* CPU_TIPROP 
+    GEL_MapAddStr(0x40000000, 0, 0x000E1028, "R|W", 0);             * Peripherals 
+    GEL_MapAddStr(0x40031000, 0, 0x00001000, "NONE", 0);            * Protected 
+    GEL_MapAddStr(0x40092000, 0, 0x00000030, "R|W|RUN_NONE", 0);    * AON_RTC, only read when halted
+    GEL_MapAddStr(0x50001000, 0, 0x00000400, "R", 0);               * FCFG1 
+    GEL_MapAddStr(0x50002000, 0, 0x00000400, "R", 0);               * FCFG2 
+    GEL_MapAddStr(0x50003000, 0, 0x00001000, "R", 0);               * CCFG 
+    GEL_MapAddStr(0xE0000000, 0, 0x00003000, "R|W", 0);             * CPU_ITM, CPU_DWT, CPU_FPB 
+    GEL_MapAddStr(0xE000E000, 0, 0x00001000, "R|W", 0);             * CPU_SCS 
+    GEL_MapAddStr(0xE0040000, 0, 0x00001000, "R|W", 0);             * CPU_TPIU 
+    GEL_MapAddStr(0xE00FE000, 0, 0x00001000, "R|W", 0);             * CPU_TIPROP 
 
 
 */
@@ -263,9 +261,45 @@ No.  Memory             Address       Type      Access Permissions  Size
                            &error_fatal);
     memory_region_add_subregion(system_memory, 0x20000000, sram);
 
-    memory_region_init_ram(sram1, NULL, "CC26xx.sram1", sram_size1,
+
+    int rom_size;
+    MemoryRegion *rom = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
+    rom_size = 0x00020000; // same as flash, 0x20000 = 128KB
+    //0x20000 => 131072Bytes => 65536Words
+    memory_region_init_ram(rom, NULL, "CC26xx.rom", rom_size,
                            &error_fatal);
-    memory_region_add_subregion(system_memory, 0x10000000, sram1);
+    memory_region_set_readonly(rom, true);
+    memory_region_add_subregion(system_memory, 0x10000000, rom);
+
+    int CCFG_size;
+    MemoryRegion *CCFG = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
+    CCFG_size = 0x1000;
+    memory_region_init_ram(CCFG, NULL, "CC26xx.CCFG", CCFG_size, &error_fatal);
+    memory_region_set_readonly(CCFG, true);
+    memory_region_add_subregion(system_memory, 0x50003000, CCFG);
+
+    int FCFG1_size;
+    MemoryRegion *FCFG1 = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
+    FCFG1_size = 0x400;
+    memory_region_init_ram(FCFG1, NULL, "CC26xx.FCFG1", FCFG1_size, &error_fatal);
+    memory_region_set_readonly(FCFG1, true);
+    memory_region_add_subregion(system_memory, 0x50001000, FCFG1);
+
+    int FCFG2_size;
+    MemoryRegion *FCFG2 = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
+    FCFG2_size = 0x400;
+    memory_region_init_ram(FCFG2, NULL, "CC26xx.FCFG2", FCFG2_size, &error_fatal);
+    memory_region_set_readonly(FCFG2, true);
+    memory_region_add_subregion(system_memory, 0x50002000, FCFG2);
+
+    //0x400 => 1024Bytes => 256Words
+
+    //int sram_size1;
+    //MemoryRegion *sram1 = g_new(MemoryRegion, 1); // g_new(T, n) is neater than g_malloc(sizeof(T) * n).
+    //sram_size1 = 0x0001cc00; // 0x1cc00 ~110KB
+    //memory_region_init_ram(sram1, NULL, "CC26xx.sram1", sram_size1,
+    //                       &error_fatal);
+    //memory_region_add_subregion(system_memory, 0x10000000, sram1);
 
 
 	DeviceState *nvic;
@@ -280,7 +314,7 @@ No.  Memory             Address       Type      Access Permissions  Size
 
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
-    SensortagFCFG_create(0x50001000, 0x2000);
+//    SensortagFCFG_create(0x50001000, 0x2000);
 
 /*steps adding dummy device:
 1. in CC26xx.c    Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);
@@ -304,7 +338,7 @@ No.  Memory             Address       Type      Access Permissions  Size
     //Control
     Dummydevice_create("SensortagVIMS",0x40034000, 0xC000);
     //    create_unimplemented_device("CCFG", 0x50003000, 0x1000);
-    Dummydevice_create("SensortagCCFG",0x50003000, 0x1000);
+//    Dummydevice_create("SensortagCCFG",0x50003000, 0x1000);
     //     create_unimplemented_device("AON_IOC", 0x40094000, 0x1000); Always-On Input/Output Controller
     Dummydevice_create("SensortagAON_IOC",0x40094000, 0x1000);
     //    create_unimplemented_device("AON_SYSCTL", 0x40090000, 0x1000); Always-On System Control

@@ -924,7 +924,7 @@ type_init(SensortagFLASH_register_types)
 
 
 //CCFG section 0x50003000
-
+/*
 
 typedef struct SensortagCCFG_state {
     SysBusDevice parent_obj;
@@ -1036,7 +1036,7 @@ static void SensortagCCFG_register_types(void)
 type_init(SensortagCCFG_register_types)
 
 
-
+*/
 
 //VIMS section 0x40034000 Versatile Instruction Memory System Control 
 
@@ -1395,7 +1395,7 @@ type_init(SensortagAUX_WUC_register_types)
 
 
 //FCFG section 0x50001000
-
+/*
 typedef struct SensortagFCFG_state {
     SysBusDevice parent_obj;
     MemoryRegion iomem;
@@ -1509,7 +1509,7 @@ static Property SensortagFCFG_properties[] = {
     DEFINE_PROP_END_OF_LIST(),
 };
 
-/* static void SensortagFCFG_init(Object *obj)
+/ static void SensortagFCFG_init(Object *obj)
 {
     //DeviceState *dev = DEVICE(obj);
     SensortagFCFG_state *s = SensortagFCFG(obj);
@@ -1520,7 +1520,7 @@ static Property SensortagFCFG_properties[] = {
                           "FCFG", 0x2000);
     sysbus_init_mmio(sbd, &s->iomem);
 }
-*/
+/
 
 
 static void SensortagFCFG_class_init(ObjectClass *klass, void *data)
@@ -1548,7 +1548,7 @@ static void SensortagFCFG_register_types(void)
 
 type_init(SensortagFCFG_register_types)
 
-
+*/
 
 /*
 //Empty ram section

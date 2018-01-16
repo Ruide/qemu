@@ -15,6 +15,7 @@
 #ifndef HW_sensortag_misc
 #define HW_sensortag_misc
 
+/*
 static inline DeviceState *SensortagFCFG_create(hwaddr addr,hwaddr size)
 {
     DeviceState *dev;
@@ -29,7 +30,7 @@ static inline DeviceState *SensortagFCFG_create(hwaddr addr,hwaddr size)
 
     return dev;
 }
-
+*/
 
 static inline DeviceState *Dummydevice_create(const char * name, hwaddr addr,hwaddr size)
 {
