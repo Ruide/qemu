@@ -1159,6 +1159,7 @@ typedef struct SensortagPRCM_state {
     uint64_t PDCTL0PERIPH; //0x138
     uint64_t PDSTAT0; //0x140   
     uint64_t PDSTAT1; //0x194
+    uint64_t CLKLOADCTL;
 } SensortagPRCM_state;
 
 static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
@@ -1176,6 +1177,14 @@ static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
         return s->PDCTL0PERIPH;
     case 0x140:
         return s->PDSTAT0;
+    case 0x28:
+        return 0x2; // CLKLOADCTL Register
+    case 0x48:
+        return 0x1; // GPIOCLKGR
+    case 0x4c:
+        return 0x1; // GPIOCLKGS
+    case 0x50:
+        return 0x1; // GPIOCLKGDS
     case 0x194:
         return s->PDSTAT1;
     default:
@@ -1198,6 +1207,7 @@ static void SensortagPRCM_write(void *opaque, hwaddr offset, uint64_t value,
         break;
     case 0x138:
         s->PDCTL0PERIPH = value;
+        break;
 /*        if(value==1){
             s->PDSTAT0 = s->PDSTAT0 | (1 << 3);//set bit 2 to 1; 
         }
@@ -1241,7 +1251,7 @@ static void SensortagPRCM_realize(DeviceState *dev, Error **errp)
     sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
     s->WARMRESET = 0x4;
     s->PDCTL1VIMS = 0x0;
-    s->PDSTAT0 = 0x1;
+    s->PDSTAT0 = 0x6;
     s->PDSTAT1 = 0x1A;
 }
 

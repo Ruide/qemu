@@ -6,5 +6,8 @@ b *0x1600
 #this is main()
 #b *0x1618
 c
+b *0x21bc
+# while PRCMPowerDomainStatus(id=4) != 1
+c
 #rwatch *0x50001318
 #rwatch *0x5000131C
