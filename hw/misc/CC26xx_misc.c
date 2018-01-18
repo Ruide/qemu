@@ -1155,7 +1155,10 @@ typedef struct SensortagPRCM_state {
     MemoryRegion iomem;
     uint64_t size; // size of mimo section. (argument transfered from CC26xx.c)
     uint64_t WARMRESET;
-    uint64_t PDCTL1VIMS;    
+    uint64_t PDCTL1VIMS;
+    uint64_t PDCTL0PERIPH; //0x138
+    uint64_t PDSTAT0; //0x140   
+    uint64_t PDSTAT1; //0x194
 } SensortagPRCM_state;
 
 static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
@@ -1169,6 +1172,12 @@ static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
         return s->WARMRESET;
     case 0x18c:
         return s->PDCTL1VIMS;
+    case 0x138:
+        return s->PDCTL0PERIPH;
+    case 0x140:
+        return s->PDSTAT0;
+    case 0x194:
+        return s->PDSTAT1;
     default:
         qemu_log_mask(LOG_UNIMP,
                       "SensortagPRCM_read_unimplemented: Bad offset %x\n", (int)offset);
@@ -1186,6 +1195,18 @@ static void SensortagPRCM_write(void *opaque, hwaddr offset, uint64_t value,
         break;
     case 0x18c:
         s->PDCTL1VIMS = value;
+        break;
+    case 0x138:
+        s->PDCTL0PERIPH = value;
+/*        if(value==1){
+            s->PDSTAT0 = s->PDSTAT0 | (1 << 3);//set bit 2 to 1; 
+        }
+        break;*/
+    case 0x140:
+        s->PDSTAT0 = value;
+        break;
+    case 0x194:
+        s->PDSTAT1 = value;
         break;
     default:
     qemu_log_mask(LOG_UNIMP,
@@ -1220,6 +1241,8 @@ static void SensortagPRCM_realize(DeviceState *dev, Error **errp)
     sysbus_init_mmio(SYS_BUS_DEVICE(s), &s->iomem);
     s->WARMRESET = 0x4;
     s->PDCTL1VIMS = 0x0;
+    s->PDSTAT0 = 0x1;
+    s->PDSTAT1 = 0x1A;
 }
 
 static Property SensortagPRCM_properties[] = {

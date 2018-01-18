@@ -1,7 +1,10 @@
 set disassemble-next-line on
 target remote localhost:1234
-b *0x10000c36
+#b *0x10000c36
 #b *0x3f30
+b *0x1600 
+#this is main()
+#b *0x1618
 c
 #rwatch *0x50001318
 #rwatch *0x5000131C
