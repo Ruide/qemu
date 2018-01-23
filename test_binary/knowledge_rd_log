@@ -5,3 +5,9 @@
 0x50001030:	0x0030	0x0032	0x0034	0x0036	0x0038	0x003a	0x003c	0x003e
 
 so offset is the offset from base registered as start addr.
+
+in memory code instruction look like F8DFF000
+when used to disassemble as arm thumb2
+need to be F000 F8DF
+ldr.w pc, [pc, #0]
+will load the next memory address relative to current pc. perhaps its because when load it, pc already go to next?

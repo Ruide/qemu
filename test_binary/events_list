@@ -1,0 +1,8 @@
+SUART_irq_state
+SUART_read
+SUART_read_fifo
+SUART_write
+SUART_can_receive
+SUART_put_fifo
+SUART_put_fifo_full
+

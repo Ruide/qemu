@@ -1,0 +1,5 @@
+If want to trace
+https://git.qemu.org/?p=qemu.git;a=blob_plain;f=docs/devel/tracing.txt;hb=HEAD
+need to rebuild qemu with trace feature on
+
+but now seems the trace log goes to qemu_debug log file!
