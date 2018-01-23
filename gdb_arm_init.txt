@@ -1,13 +1,23 @@
 set disassemble-next-line on
 target remote localhost:1234
+b *0x2a86
+c
+
+#b *0x46dc this is UART_write, it leat to the first "Echoing characters:"
+#b *0x2a86
+#this is UART_read(). and the program will stuck until it receive UART.
+#use: telnet localhost 4444 to connect
+#b *0x2a30 
+#this is echoFxn()
 #b *0x10000c36
 #b *0x3f30
-b *0x1600 
+#b *0x1600 
 #this is main()
 #b *0x1618
-c
-b *0x21bc
+#c
+#this is Board_initUART()
+#b *0x21bc
 # while PRCMPowerDomainStatus(id=4) != 1
-c
+#c
 #rwatch *0x50001318
 #rwatch *0x5000131C

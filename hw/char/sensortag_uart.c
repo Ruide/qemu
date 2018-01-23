@@ -77,6 +77,9 @@ static uint64_t suart_read(void *opaque, hwaddr offset,
         s->rsr = c >> 8;
         suart_update(s);
         qemu_chr_fe_accept_input(&s->chr);
+        qemu_log_mask(LOG_UNIMP,
+            "suart_read_char: Offset %x\n", (int)offset);
+
         r = c;
         break;
     case 1: /* UARTRSR */
@@ -160,6 +163,8 @@ static void suart_write(void *opaque, hwaddr offset,
         qemu_chr_fe_write_all(&s->chr, &ch, 1);
         s->int_level |= 0x20; // #define PL011_INT_TX 0x20
                               // #define PL011_INT_RX 0x10
+        qemu_log_mask(LOG_UNIMP,
+            "suart_write_char: Offset %x Write value %x\n", (int)offset,(int)value);
 
         suart_update(s);
         break;
