@@ -202,6 +202,8 @@ static uint64_t SensortagAON_BATMON_read(void *opaque, hwaddr offset,
     switch(offset){
     case 0x24:
         return s->FLASHPUMPP0;
+    case 0x28:
+        return 0x346;
     default:
         qemu_log_mask(LOG_UNIMP,
                       "SensortagAON_BATMON_read_unimplemented: Bad offset %x\n", (int)offset);
@@ -1187,6 +1189,8 @@ static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
         return 0x1; // GPIOCLKGDS
     case 0x194:
         return s->PDSTAT1;
+    case 0x224:
+        return 0x3;// RAMRETEN
     default:
         qemu_log_mask(LOG_UNIMP,
                       "SensortagPRCM_read_unimplemented: Bad offset %x\n", (int)offset);

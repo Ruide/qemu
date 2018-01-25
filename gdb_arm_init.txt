@@ -1,8 +1,9 @@
 set disassemble-next-line on
 target remote localhost:1234
-b *0x46dc
+b *0x1c6c
 c
 
+#b *0x1c6c is entering Semaphore_pend from CC26XX_Uart_write
 #b *0x1c76 will be the return of Semaphore_pend. and it will use pop to return.
 #b *0x1c68, this is inside UARTCC26XX_wirte, if Semaphore_pend will return.
 #b *0x46dc this is UART_write, it leat to the first "Echoing characters:"
