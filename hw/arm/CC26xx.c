@@ -309,7 +309,7 @@ No.  Memory             Address       Type      Access Permissions  Size
     qdev_connect_gpio_out_named(nvic, "SYSRESETREQ", 0,
                                 qemu_allocate_irq(&do_sys_reset, NULL, 0));
 
-    static const int uart_irq[] = {5};
+    static const int uart_irq[] = {21};
 
 
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
@@ -692,4 +692,70 @@ Ch CPUIRQSEL3 Output Selection for CPU Interrupt 3 Section 4.7.2.4
 900h I2SSTMPSEL0 Output Selection for I2S Subscriber 0 Section 4.7.2.94
 A00h FRZSEL0 Output Selection for FRZ Subscriber Section 4.7.2.95
 F00h SWEV Set or Clear Software Events Section 4.7.2.96
+*/
+
+/* CPU_SCS Registers
+
+Offset Acronym Register Name Section
+4h ICTR Interrupt Control Type Section 2.7.4.1
+8h ACTLR Auxiliary Control Section 2.7.4.2
+10h STCSR SysTick Control and Status Section 2.7.4.3
+14h STRVR SysTick Reload Value Section 2.7.4.4
+18h STCVR SysTick Current Value Section 2.7.4.5
+1Ch STCR SysTick Calibration Value Section 2.7.4.6
+100h NVIC_ISER0 Irq 0 to 31 Set Enable Section 2.7.4.7
+104h NVIC_ISER1 Irq 32 to 63 Set Enable Section 2.7.4.8
+180h NVIC_ICER0 Irq 0 to 31 Clear Enable Section 2.7.4.9
+184h NVIC_ICER1 Irq 32 to 63 Clear Enable Section 2.7.4.10
+200h NVIC_ISPR0 Irq 0 to 31 Set Pending Section 2.7.4.11
+204h NVIC_ISPR1 Irq 32 to 63 Set Pending Section 2.7.4.12
+280h NVIC_ICPR0 Irq 0 to 31 Clear Pending Section 2.7.4.13
+284h NVIC_ICPR1 Irq 32 to 63 Clear Pending Section 2.7.4.14
+Offset Acronym Register Name Section
+300h NVIC_IABR0 Irq 0 to 31 Active Bit Section 2.7.4.15
+304h NVIC_IABR1 Irq 32 to 63 Active Bit Section 2.7.4.16
+400h NVIC_IPR0 Irq 0 to 3 Priority Section 2.7.4.17
+404h NVIC_IPR1 Irq 4 to 7 Priority Section 2.7.4.18
+408h NVIC_IPR2 Irq 8 to 11 Priority Section 2.7.4.19
+40Ch NVIC_IPR3 Irq 12 to 15 Priority Section 2.7.4.20
+410h NVIC_IPR4 Irq 16 to 19 Priority Section 2.7.4.21
+414h NVIC_IPR5 Irq 20 to 23 Priority Section 2.7.4.22
+418h NVIC_IPR6 Irq 24 to 27 Priority Section 2.7.4.23
+41Ch NVIC_IPR7 Irq 28 to 31 Priority Section 2.7.4.24
+420h NVIC_IPR8 Irq 32 to 35 Priority Section 2.7.4.25
+D00h CPUID CPUID Base Section 2.7.4.26
+D04h ICSR Interrupt Control State Section 2.7.4.27
+D08h VTOR Vector Table Offset Section 2.7.4.28
+D0Ch AIRCR Application Interrupt/Reset Control Section 2.7.4.29
+D10h SCR System Control Section 2.7.4.30
+D14h CCR Configuration Control Section 2.7.4.31
+D18h SHPR1 System Handlers 4-7 Priority Section 2.7.4.32
+D1Ch SHPR2 System Handlers 8-11 Priority Section 2.7.4.33
+D20h SHPR3 System Handlers 12-15 Priority Section 2.7.4.34
+D24h SHCSR System Handler Control and State Section 2.7.4.35
+D28h CFSR Configurable Fault Status Section 2.7.4.36
+D2Ch HFSR Hard Fault Status Section 2.7.4.37
+D30h DFSR Debug Fault Status Section 2.7.4.38
+D34h MMFAR Mem Manage Fault Address Section 2.7.4.39
+D38h BFAR Bus Fault Address Section 2.7.4.40
+D3Ch AFSR Auxiliary Fault Status Section 2.7.4.41
+D40h ID_PFR0 Processor Feature 0 Section 2.7.4.42
+D44h ID_PFR1 Processor Feature 1 Section 2.7.4.43
+D48h ID_DFR0 Debug Feature 0 Section 2.7.4.44
+D4Ch ID_AFR0 Auxiliary Feature 0 Section 2.7.4.45
+D50h ID_MMFR0 Memory Model Feature 0 Section 2.7.4.46
+D54h ID_MMFR1 Memory Model Feature 1 Section 2.7.4.47
+D58h ID_MMFR2 Memory Model Feature 2 Section 2.7.4.48
+D5Ch ID_MMFR3 Memory Model Feature 3 Section 2.7.4.49
+D60h ID_ISAR0 ISA Feature 0 Section 2.7.4.50
+D64h ID_ISAR1 ISA Feature 1 Section 2.7.4.51
+D68h ID_ISAR2 ISA Feature 2 Section 2.7.4.52
+D6Ch ID_ISAR3 ISA Feature 3 Section 2.7.4.53
+D70h ID_ISAR4 ISA Feature 4 Section 2.7.4.54
+D88h CPACR Coprocessor Access Control Section 2.7.4.55
+DF0h DHCSR Debug Halting Control and Status Section 2.7.4.56
+DF4h DCRSR Deubg Core Register Selector Section 2.7.4.57
+DF8h DCRDR Debug Core Register Data Section 2.7.4.58
+DFCh DEMCR Debug Exception and Monitor Control Section 2.7.4.59
+F00h STIR Software Trigger Interrupt Section 2.7.4.60
 */

@@ -432,6 +432,10 @@ void HELPER(wfi)(CPUARMState *env, uint32_t insn_len)
     CPUState *cs = CPU(arm_env_get_cpu(env));
     int target_el = check_wfx_trap(env, false);
 
+
+    // function as NOP -- change here to go forward
+    return;
+
     if (cpu_has_work(cs)) {
         /* Don't bother to go into our "low power state" if
          * we would just wake up immediately.
