@@ -1,7 +1,7 @@
 set disassemble-next-line on
 target remote localhost:1234
-b *0x1c6c
-c
+#b *0x1c6c
+#c
 
 #b *0x1c6c is entering Semaphore_pend from CC26XX_Uart_write
 #b *0x1c76 will be the return of Semaphore_pend. and it will use pop to return.
