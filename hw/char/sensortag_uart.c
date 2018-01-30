@@ -47,6 +47,8 @@ static void suart_update(SUARTState *s)
     flags = s->int_level & s->int_enabled; // imsc && ris
     trace_suart_irq_state(flags != 0); // flags != 0 set up the level in log()
     qemu_set_irq(s->irq, flags != 0);
+    qemu_log_mask(LOG_UNIMP, "qemu_set_irq: flags is %x\n",(int)flags);
+
 }
 
 
@@ -56,6 +58,9 @@ static uint64_t suart_read(void *opaque, hwaddr offset,
     SUARTState *s = (SUARTState *)opaque;
     uint32_t c;
     uint64_t r;
+
+//    qemu_log_mask(LOG_UNIMP,
+//            "qemu_suart_read: Offset %x\n", (int)offset);
 
     switch (offset >> 2) {
     case 0: /* UARTDR */
@@ -153,6 +158,9 @@ static void suart_write(void *opaque, hwaddr offset,
     unsigned char ch;
 
     trace_suart_write(offset, value);
+
+//    qemu_log_mask(LOG_UNIMP,
+//            "qemu_suart_write: Offset %x Write value %x\n", (int)offset,(int)value);
 
     switch (offset >> 2) {
     case 0: /* UARTDR */
