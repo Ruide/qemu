@@ -310,11 +310,16 @@ No.  Memory             Address       Type      Access Permissions  Size
                                 qemu_allocate_irq(&do_sys_reset, NULL, 0));
 
     static const int uart_irq[] = {21};
+    static const int rtc_irq[] = {20};
 
 
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
 //    SensortagFCFG_create(0x50001000, 0x2000);
+
+    saon_rtc_create(0x40092000,qdev_get_gpio_in(nvic, rtc_irq[0]));
+//    create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
+
 
 /*steps adding dummy device:
 1. in CC26xx.c    Dummydevice_create("SensortagAUX_WUC",0x400C6000, 0x1000);
@@ -354,7 +359,7 @@ No.  Memory             Address       Type      Access Permissions  Size
     Dummydevice_create("SensortagAON_BATMON",0x40095000, 0x2C000);
     //    create_unimplemented_device("AUX_DDI0_OSC", 0x400CA000, 0x1000);
     Dummydevice_create("SensortagAUX_DDI0_OSC",0x400CA000, 0x1000);
-
+    
     
 
 
@@ -405,7 +410,6 @@ No.  Memory             Address       Type      Access Permissions  Size
     create_unimplemented_device("WDT", 0x40080000, 0x1000);
     create_unimplemented_device("IOC", 0x40081000, 0x1000);
     create_unimplemented_device("EVENT", 0x40083000, 0x1000);
-    create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
     create_unimplemented_device("AON_EVENT", 0x40093000, 0x1000);
     create_unimplemented_device("AUX_AIODIO-0", 0x400C1000, 0x1000);
     create_unimplemented_device("AUX_AIODIO-1", 0x400C2000, 0x2000);
