@@ -1162,6 +1162,8 @@ typedef struct SensortagPRCM_state {
     uint64_t PDSTAT0; //0x140   
     uint64_t PDSTAT1; //0x194
     uint64_t CLKLOADCTL;
+    uint64_t RAMRETEN; // 0x224
+    uint64_t PDCTL1CPU; //0x184
 } SensortagPRCM_state;
 
 static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
@@ -1187,6 +1189,8 @@ static uint64_t SensortagPRCM_read(void *opaque, hwaddr offset,
         return 0x1; // GPIOCLKGS
     case 0x50:
         return 0x1; // GPIOCLKGDS
+    case 0x184:
+        return s->PDCTL1CPU;
     case 0x194:
         return s->PDSTAT1;
     case 0x224:
@@ -1219,8 +1223,14 @@ static void SensortagPRCM_write(void *opaque, hwaddr offset, uint64_t value,
     case 0x140:
         s->PDSTAT0 = value;
         break;
+    case 0x184:
+        s->PDCTL1CPU = value;
+        break;
     case 0x194:
         s->PDSTAT1 = value;
+        break;
+    case 0x224:
+        s->RAMRETEN = value;
         break;
     default:
     qemu_log_mask(LOG_UNIMP,

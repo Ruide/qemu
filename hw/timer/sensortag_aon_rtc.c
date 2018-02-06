@@ -59,7 +59,13 @@ static void saon_rtc_reload(saon_rtc_state *s, int reset)
 
     tick += NANOSECONDS_PER_SECOND;
     s->tick = tick;
-    timer_mod(s->timer, tick);
+    /* modify the current timer so that it will be fired when current_time
+    >= expire_time. The corresponding callback will be called. */
+	//void timer_mod_ns(QEMUTimer *ts, int64_t expire_time)
+
+    timer_mod(s->timer, tick);// tick is expire time, when current time >= expired time, it fire callback
+    qemu_log_mask(LOG_UNIMP, "reload_tick: %x\n", (int)tick);
+
 }
 
 static void saon_rtc_tick(void *opaque)
@@ -68,8 +74,6 @@ static void saon_rtc_tick(void *opaque)
     saon_rtc_state *s = (saon_rtc_state *)opaque;
     tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
     qemu_log_mask(LOG_UNIMP, "tick: %x\n", (int)tick);
-
-
     saon_rtc_update_irq(s);
 }
 
@@ -87,6 +91,8 @@ static uint64_t saon_rtc_read(void *opaque, hwaddr offset,
     uint32_t sync; //0x2c aon sync
 */
 
+//    qemu_log_mask(LOG_UNIMP,
+//            "saon_rtc_read_unimplemented: Offset %x\n", (int)offset);
 
     switch (offset) {
     case 0x00: 
@@ -105,7 +111,7 @@ static uint64_t saon_rtc_read(void *opaque, hwaddr offset,
         return s->aon_sync;
     default:
         qemu_log_mask(LOG_UNIMP,
-            "saon_rtc_read_unimplemented: Offset %x \n", (int)offset);
+            "saon_rtc_read_unimplemented: Offset %x\n", (int)offset);
         return 0;
     }
 }
@@ -123,6 +129,10 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
     uint32_t ch0cmp; //0x18 chann 0 compare val
     uint32_t sync; //0x2c aon sync
 */
+
+//	qemu_log_mask(LOG_UNIMP,
+//            "saon_rtc_write_unimplemented: Offset %x Write value %x\n", (int)offset,(int)value);
+
 
     switch (offset) {
     case 0x00: 
