@@ -1,5 +1,5 @@
 /*
- * TI sensortag uart (suart)
+ * TI sensortag aon_rtc
  *
  * Copyright (c) 2006 CodeSourcery.
  * Written by Paul Brook
@@ -13,11 +13,10 @@
 #include "qemu/log.h"
 #include "trace.h"
 
-/* General purpose timer module.  */
+#define NANOSECONDS_PER_SECOND 1000000000LL
 
-#define TYPE_SAON_RTC "saon_rtc"
 #define SAON_RTC(obj) \
-    OBJECT_CHECK(saon_rtc_state, (obj), TYPE_SAON_RTC)
+    OBJECT_CHECK(saon_rtc_state, (obj), "saon_rtc")
 
 typedef struct saon_rtc_state {
     SysBusDevice parent_obj;
@@ -28,8 +27,9 @@ typedef struct saon_rtc_state {
     uint32_t subsec; //0xc second counter value, frac part
     uint32_t chctl; //0x14 chann config
     uint32_t ch0cmp; // chann 0 compare val
-    uint32_t sync; //aon sync
+    uint32_t aon_sync; //aon sync
     int64_t tick;
+    uint32_t irq_state;
     struct saon_rtc_state *opaque;
     QEMUTimer *timer;
     qemu_irq irq;
@@ -38,70 +38,38 @@ typedef struct saon_rtc_state {
 static void saon_rtc_update_irq(saon_rtc_state *s)
 {
     int level;
-    level = (s->state & s->mask) != 0;
+    level = (s->irq_state != 0);
     qemu_set_irq(s->irq, level);
 }
 
-static void saon_rtc_stop(gptm_state *s, int n)
-{
-    timer_del(s->timer[n]);
-}
+//static void saon_rtc_stop(saon_rtc_state *s, int n)
+//{
+ //   timer_del(s->timer[n]);
+//}
 
-static void saon_rtc_reload(gptm_state *s, int n, int reset)
+static void saon_rtc_reload(saon_rtc_state *s, int reset)
 {
     int64_t tick;
     if (reset)
         tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
     else
-        tick = s->tick[n];
+        tick = s->tick;
 
-    if (s->config == 0) {
-        /* 32-bit CountDown.  */
-        uint32_t count;
-        count = s->load[0] | (s->load[1] << 16);
-        tick += (int64_t)count * system_clock_scale;
-    } else if (s->config == 1) {
-        /* 32-bit RTC.  1Hz tick.  */
-        tick += NANOSECONDS_PER_SECOND;
-    } else if (s->mode[n] == 0xa) {
-        /* PWM mode.  Not implemented.  */
-    } 
-    s->tick[n] = tick;
+
+
+    tick += NANOSECONDS_PER_SECOND;
+    s->tick = tick;
     timer_mod(s->timer, tick);
-
 }
 
 static void saon_rtc_tick(void *opaque)
 {
+	int64_t tick;
     saon_rtc_state *s = (saon_rtc_state *)opaque;
+    tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+    qemu_log_mask(LOG_UNIMP, "tick: %x\n", (int)tick);
 
-    if (s->config == 0) {
-        s->state |= 1;
-        if (s->mode[0] & 1) {
-            /* One-shot.  */
-            s->control &= ~1;
-        } else {
-            /* Periodic.  */
-            saon_rtc_reload(s, 0, 0);
-        }
-    } else if (s->config == 1) {
-        /* RTC.  */
-        uint32_t match;
-        s->rtc++;
-        match = s->match[0] | (s->match[1] << 16);
-        if (s->rtc > match)
-            s->rtc = 0;
-        if (s->rtc == 0) {
-            s->state |= 8;
-        }
-        saon_rtc_reload(s, 0, 0);
-    } else if (s->mode[n] == 0xa) {
-        /* PWM mode.  Not implemented.  */
-    } else {
-        qemu_log_mask(LOG_UNIMP,
-                      "GPTM: 16-bit timer mode unimplemented: 0x%x\n",
-                      s->mode[n]);
-    }
+
     saon_rtc_update_irq(s);
 }
 
@@ -134,7 +102,7 @@ static uint64_t saon_rtc_read(void *opaque, hwaddr offset,
     case 0x18: 
         return s->ch0cmp;
     case 0x2c: 
-        return s->sync;
+        return s->aon_sync;
     default:
         qemu_log_mask(LOG_UNIMP,
             "saon_rtc_read_unimplemented: Offset %x \n", (int)offset);
@@ -163,7 +131,7 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         if (value == 0x80) {
         	s->sec = 0;
         	s->subsec = 0;
-      	    timer_mod(s->timer, 0);
+      	    saon_rtc_reload(s,1);
         }
         break;
     case 0x04: 
@@ -176,7 +144,7 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         s->ch0cmp = value;
         break;
     case 0x2c: 
-        s->sync = value;
+        s->aon_sync = value;
         break;
     default:
         qemu_log_mask(LOG_UNIMP,
@@ -185,43 +153,43 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
     //saon_rtc_update_irq(s);
 }
 
-static const MemoryRegionOps gptm_ops = {
-    .read = gptm_read,
-    .write = gptm_write,
+static const MemoryRegionOps saon_rtc_ops = {
+    .read = saon_rtc_read,
+    .write = saon_rtc_write,
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
+
+
+
 
 static const VMStateDescription vmstate_saon_rtc = {
     .name = "saon_rtc",
     .version_id = 1,
     .minimum_version_id = 1,
     .fields = (VMStateField[]) {
-        VMSTATE_UINT32(config, saon_rtc_state),
-        VMSTATE_UINT32_ARRAY(mode, saon_rtc_state, 2),
-        VMSTATE_UINT32(control, saon_rtc_state),
-        VMSTATE_UINT32(state, saon_rtc_state),
-        VMSTATE_UINT32(mask, saon_rtc_state),
-        VMSTATE_UNUSED(8),
-        VMSTATE_UINT32_ARRAY(load, saon_rtc_state, 2),
-        VMSTATE_UINT32_ARRAY(match, saon_rtc_state, 2),
-        VMSTATE_UINT32_ARRAY(prescale, saon_rtc_state, 2),
-        VMSTATE_UINT32_ARRAY(match_prescale, saon_rtc_state, 2),
-        VMSTATE_UINT32(rtc, saon_rtc_state),
-        VMSTATE_INT64_ARRAY(tick, saon_rtc_state, 2),
-        VMSTATE_TIMER_PTR_ARRAY(timer, saon_rtc_state, 2),
+        VMSTATE_UINT32(ctl, saon_rtc_state),
+        VMSTATE_UINT32(evflags, saon_rtc_state),
+        VMSTATE_UINT32(sec, saon_rtc_state),
+        VMSTATE_UINT32(subsec, saon_rtc_state),
+        VMSTATE_UINT32(chctl, saon_rtc_state),
+        VMSTATE_UINT32(ch0cmp, saon_rtc_state),
+        VMSTATE_UINT32(aon_sync, saon_rtc_state),
+        VMSTATE_UINT32(irq_state, saon_rtc_state),
+        VMSTATE_INT64(tick, saon_rtc_state),
+        VMSTATE_TIMER_PTR(timer, saon_rtc_state),
         VMSTATE_END_OF_LIST()
     }
 };
 
 static void saon_rtc_init(Object *obj)
 {
-    DeviceState *dev = DEVICE(obj);
-    saon_rtc_state *s = SAON_RTC_INIT(obj);
+    //DeviceState *dev = DEVICE(obj);
+    saon_rtc_state *s = SAON_RTC(obj);
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
 
     sysbus_init_irq(sbd, &s->irq);
 
-    memory_region_init_io(&s->iomem, obj, &gptm_ops, s,
+    memory_region_init_io(&s->iomem, obj, &saon_rtc_ops, s,
                           "saon_rtc", 0x1000);
     sysbus_init_mmio(sbd, &s->iomem);
 
@@ -239,7 +207,7 @@ static void saon_rtc_class_init(ObjectClass *klass, void *data)
 }
 
 static const TypeInfo saon_rtc_info = {
-    .name          = TYPE_SAON_RTC,
+    .name          = "saon_rtc",
     .parent        = TYPE_SYS_BUS_DEVICE,
     .instance_size = sizeof(saon_rtc_state),
     .instance_init = saon_rtc_init,

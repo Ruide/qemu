@@ -35,6 +35,7 @@
 #include "exec/address-spaces.h"
 #include "sysemu/sysemu.h"
 #include "hw/char/sensortag_uart.h"
+#include "hw/timer/sensortag_aon_rtc.h"
 #include "hw/misc/CC26xx_misc.h"
 #include "hw/misc/unimp.h"
 #include "cpu.h"
