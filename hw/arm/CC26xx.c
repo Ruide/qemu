@@ -303,21 +303,40 @@ No.  Memory             Address       Type      Access Permissions  Size
     //memory_region_add_subregion(system_memory, 0x10000000, sram1);
 
 
+/* Before:
+
+    Init CPU and memory for a v7-M based board.
+   flash_size and sram_size are in kb.
+   Returns the NVIC array.  
+
+   qemu_irq *armv7m_init(Object *parent, MemoryRegion *address_space_mem,
+                      int flash_size, int sram_size,
+                      const char *kernel_filename, const char *cpu_model)
+*/
+
+/* Init CPU and memory for a v7-M based board.
+   mem_size is in bytes.
+   Returns the ARMv7M device.  
+
+    DeviceState *armv7m_init(MemoryRegion *system_memory, int mem_size, int num_irq,
+                         const char *kernel_filename, const char *cpu_type)
+*/
 	DeviceState *nvic;
+
     nvic = armv7m_init(system_memory, flash_size, NUM_IRQ_LINES,
                        ms->kernel_filename, ms->cpu_type);
 
     qdev_connect_gpio_out_named(nvic, "SYSRESETREQ", 0,
                                 qemu_allocate_irq(&do_sys_reset, NULL, 0));
 
-    static const int uart_irq[] = {21};
+    static const int uart_irq[] = {5};
     
 
     suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
 //    SensortagFCFG_create(0x50001000, 0x2000);
     
-    static const int rtc_irq[] = {20};
+    static const int rtc_irq[] = {4};
     saon_rtc_create(0x40092000,qdev_get_gpio_in(nvic, rtc_irq[0]));
     //create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
 

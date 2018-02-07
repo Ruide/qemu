@@ -40,6 +40,7 @@ static void saon_rtc_update_irq(saon_rtc_state *s)
     int level;
     level = (s->irq_state != 0);
     qemu_set_irq(s->irq, level);
+    qemu_notify_event();
 }
 
 //static void saon_rtc_stop(saon_rtc_state *s, int n)
@@ -54,17 +55,18 @@ static void saon_rtc_reload(saon_rtc_state *s, int reset)
         tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
     else
         tick = s->tick;
-
-
-
+    qemu_log_mask(LOG_UNIMP, "current_time: %d nanosecond\n", (int)tick);
     tick += NANOSECONDS_PER_SECOND;
     s->tick = tick;
+    qemu_log_mask(LOG_UNIMP, "modified_current_time: %d nanosecond\n", (int)tick);
+
     /* modify the current timer so that it will be fired when current_time
     >= expire_time. The corresponding callback will be called. */
 	//void timer_mod_ns(QEMUTimer *ts, int64_t expire_time)
-
     timer_mod(s->timer, tick);// tick is expire time, when current time >= expired time, it fire callback
-    qemu_log_mask(LOG_UNIMP, "reload_tick: %x\n", (int)tick);
+    //qemu_log_mask(LOG_UNIMP, "new_tick_after_plus_1_sec: %x\n", (int)qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
+    //qemu_log_mask(LOG_UNIMP, "2nd_new_tick_after_plus_1_sec: %x\n", (int)qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
+    saon_rtc_update_irq(s);
 
 }
 
@@ -73,8 +75,10 @@ static void saon_rtc_tick(void *opaque)
 	int64_t tick;
     saon_rtc_state *s = (saon_rtc_state *)opaque;
     tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
-    qemu_log_mask(LOG_UNIMP, "tick: %x\n", (int)tick);
-    saon_rtc_update_irq(s);
+    qemu_log_mask(LOG_UNIMP, "tick_callback_time: %d nanosecond\n", (int)tick);
+    int level;
+    level = (s->irq_state == 0);
+    qemu_set_irq(s->irq, level);
 }
 
 static uint64_t saon_rtc_read(void *opaque, hwaddr offset,
@@ -204,6 +208,7 @@ static void saon_rtc_init(Object *obj)
     sysbus_init_mmio(sbd, &s->iomem);
 
     s->opaque = s;
+    s->irq_state = 0;
     s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, saon_rtc_tick, &s->opaque);
 }
 
