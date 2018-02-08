@@ -35,33 +35,39 @@ typedef struct saon_rtc_state {
     qemu_irq irq;
 } saon_rtc_state;
 
+/*
+
 static void saon_rtc_update_irq(saon_rtc_state *s)
 {
     int level;
     level = (s->irq_state != 0);
     qemu_set_irq(s->irq, level);
-    qemu_notify_event();
 }
 
+*/
 //static void saon_rtc_stop(saon_rtc_state *s, int n)
 //{
  //   timer_del(s->timer[n]);
 //}
 
+/*
+
 static void saon_rtc_reload(saon_rtc_state *s, int reset)
 {
+
     int64_t tick;
     if (reset)
         tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
     else
         tick = s->tick;
     qemu_log_mask(LOG_UNIMP, "current_time: %d nanosecond\n", (int)tick);
-    tick += NANOSECONDS_PER_SECOND;
+    //tick += NANOSECONDS_PER_SECOND; 1000000000LL
+    tick += (s->ch0cmp & 0xffff) * 15258;//select latter 16 bits 
     s->tick = tick;
-    qemu_log_mask(LOG_UNIMP, "modified_current_time: %d nanosecond\n", (int)tick);
+    qemu_log_mask(LOG_UNIMP, "setted_callback_time: %d nanosecond, s->ch0cmp is %d\n", (int)tick,(int)s->ch0cmp);
 
-    /* modify the current timer so that it will be fired when current_time
-    >= expire_time. The corresponding callback will be called. */
+    //modify the current timer so that it will be fired when current_time
+    //>= expire_time. The corresponding callback will be called. 
 	//void timer_mod_ns(QEMUTimer *ts, int64_t expire_time)
     timer_mod(s->timer, tick);// tick is expire time, when current time >= expired time, it fire callback
     //qemu_log_mask(LOG_UNIMP, "new_tick_after_plus_1_sec: %x\n", (int)qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL));
@@ -70,15 +76,32 @@ static void saon_rtc_reload(saon_rtc_state *s, int reset)
 
 }
 
+*/
+
 static void saon_rtc_tick(void *opaque)
 {
 	int64_t tick;
     saon_rtc_state *s = (saon_rtc_state *)opaque;
     tick = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
-    qemu_log_mask(LOG_UNIMP, "tick_callback_time: %d nanosecond\n", (int)tick);
+
+    qemu_log_mask(LOG_UNIMP, "1.tick_callback_time: %d nanosecond, s->ch0cmp: %d ns, s->ctl: %d \n", (int)tick,(int)s->ch0cmp,(int)s->ctl);
+
+    if((int)s->ch0cmp == 0){
+        return;
+    }
+
+    qemu_log_mask(LOG_UNIMP, "2.tick_callback_time: %d nanosecond, s->ch0cmp: %d ns\n", (int)tick,(int)s->ch0cmp);
+    //15258.78 ns is the min unit for [0~15] bit of 32 bit time compare register
+    tick = s->tick;
+    tick += (s->ch0cmp & 0xffff) * 15258;//select latter 16 bits 
+    s->tick = tick;
+    timer_mod(s->timer, tick);// tick is expire time, when current time >= expired time, it fire callback
+
     int level;
     level = (s->irq_state == 0);
     qemu_set_irq(s->irq, level);
+    //qemu_notify_event();
+
 }
 
 static uint64_t saon_rtc_read(void *opaque, hwaddr offset,
@@ -145,7 +168,7 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         if (value == 0x80) {
         	s->sec = 0;
         	s->subsec = 0;
-      	    saon_rtc_reload(s,1);
+      	    //saon_rtc_reload(s,1);
         }
         break;
     case 0x04: 
@@ -156,6 +179,9 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         break;
     case 0x18: 
         s->ch0cmp = value;
+        qemu_log_mask(LOG_UNIMP, "write compare time: %d ns\n", (int)s->ch0cmp);
+        //saon_rtc_reload(s,1);
+        saon_rtc_tick(s);
         break;
     case 0x2c: 
         s->aon_sync = value;

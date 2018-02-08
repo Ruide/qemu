@@ -329,15 +329,16 @@ No.  Memory             Address       Type      Access Permissions  Size
     qdev_connect_gpio_out_named(nvic, "SYSRESETREQ", 0,
                                 qemu_allocate_irq(&do_sys_reset, NULL, 0));
 
-    static const int uart_irq[] = {5};
-    
+//Exception#        Interrupt #         Offset          Name
+//  20                  4               0x0000 0050     AON RTC
+//  21                  5               0x0000 0054     UART0
+//  22                  6               0x0000 0058     UART1
 
-    suart_create(0x40001000,qdev_get_gpio_in(nvic, uart_irq[0]),serial_hds[0]);
+    suart_create(0x40001000,qdev_get_gpio_in(nvic, 5),serial_hds[0]);
     //create_unimplemented_device("FCFG",0x50001000, 0x2000);
 //    SensortagFCFG_create(0x50001000, 0x2000);
     
-    static const int rtc_irq[] = {4};
-    saon_rtc_create(0x40092000,qdev_get_gpio_in(nvic, rtc_irq[0]));
+    saon_rtc_create(0x40092000,qdev_get_gpio_in(nvic, 4));
     //create_unimplemented_device("AON_RTC", 0x40092000, 0x1000);
 
 

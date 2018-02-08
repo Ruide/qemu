@@ -1,5 +1,6 @@
 set disassemble-next-line on
 target remote localhost:1234
+#b *0x1001C89D
 #b *0x1c6c
 #c
 
