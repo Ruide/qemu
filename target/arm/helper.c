@@ -6750,6 +6750,9 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
             qemu_log_mask(LOG_GUEST_ERROR,
                           "M profile exception return with non-8-aligned SP "
                           "for destination state is UNPREDICTABLE\n");
+            env->regs[15] &= ~1U; //work around for now, should be a bug in guest code.
+            // the return address should not have 0 bit set, should be cleared
+            // only when bx to an code address should the 0 bit set to indicate thumb instruction.
         }
 
         /* Do we need to pop callee-saved registers? */

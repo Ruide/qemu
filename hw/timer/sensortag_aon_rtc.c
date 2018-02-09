@@ -235,7 +235,7 @@ static void saon_rtc_init(Object *obj)
 
     s->opaque = s;
     s->irq_state = 0;
-    s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, saon_rtc_tick, &s->opaque);
+    s->timer = timer_new_ns(QEMU_CLOCK_VIRTUAL, saon_rtc_tick, s->opaque);//should be s->opaque instead of &s
 }
 
 
