@@ -51,9 +51,9 @@ static void saon_rtc_update_irq(saon_rtc_state *s)
     // 2. sec&subsec > ch0cmp
     // 3. CHCTL.ch0_en == 1
 
-    if (((s->ctl)&1) == 1){
-        if(s->ctl>>16 == 1){
-            if(((s->chctl)&1) == 1){
+    if (((s->ctl)&0x1) == 1){
+        if(((((s->ctl))>>16)&0x1) == 1){
+            if(((s->chctl)&0x1) == 1){
                 if(current_time>compare_time){
                     if(current_time>0){
                         qemu_log_mask(LOG_UNIMP, "rtc irq call interrupt\n");
@@ -107,14 +107,10 @@ static void saon_rtc_tick(void *opaque)
 
 
     if (reset_help == 0){
+    	qemu_log_mask(LOG_UNIMP,
+            "did not reset counter before set compare value");
         start_tick = tick;
         reset_help = 1;
-    }
-    
-
-
-    if((int)s->ch0cmp == 0 && (int)s->chctl != 1){
-        return;
     }
 
 
@@ -132,15 +128,15 @@ static void saon_rtc_tick(void *opaque)
 
     if (current_time > compare_time){
         saon_rtc_update_irq(s);
-        return;
         //15258.78 ns is the min unit for [0~15] bit of 32 bit time compare register
     }
+    else{
+    	tick += (s->ch0cmp & 0xffff) * 15258;//select latter 16 bits 
+	    s->tick = tick;
+    	timer_mod(s->timer, tick);// tick is expire time, when current time >= expired time, it fire callback
+    }
 
-    tick = s->tick;
-    tick += (s->ch0cmp & 0xffff) * 15258;//select latter 16 bits 
-    s->tick = tick;
-    timer_mod(s->timer, tick);// tick is expire time, when current time >= expired time, it fire callback
-
+    
 }
 
 static uint64_t saon_rtc_read(void *opaque, hwaddr offset,
@@ -205,10 +201,9 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         s->ctl = value;
         // 0x80 reset counter
         if (value == 0x80) {
-        	s->sec = 0;
-        	s->subsec = 0;
+    		start_tick=qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+	    	reset_help = 1;
         }
-        saon_rtc_update_irq(s);
         break;
     case 0x04: 
         s->evflags = value;
@@ -221,12 +216,11 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
     case 0x18: 
         s->ch0cmp = value;
         qemu_log_mask(LOG_UNIMP, "write compare time: %d ns\n", (int)s->ch0cmp);
-        //saon_rtc_reload(s,1);
         saon_rtc_tick(s);
+        //saon_rtc_reload(s,1);
         break;
     case 0x2c: 
         s->aon_sync = value;
-        saon_rtc_update_irq(s);
         break;
     default:
         qemu_log_mask(LOG_UNIMP,
