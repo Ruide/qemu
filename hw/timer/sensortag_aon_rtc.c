@@ -56,7 +56,7 @@ static void saon_rtc_update_irq(saon_rtc_state *s)
             if(((s->chctl)&0x1) == 1){
                 if(current_time>compare_time){
                     if(current_time>0){
-                        qemu_log_mask(LOG_UNIMP, "rtc irq call interrupt\n");
+                        qemu_log_mask(LOG_UNIMP, "rtc irq call interrupt, current_time: %d, compare_time: %d\n",(int)current_time,(int)compare_time);
                         qemu_set_irq(s->irq, 1);
                     }
                 }
