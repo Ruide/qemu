@@ -21,6 +21,9 @@
 #include "qemu-common.h"
 #include "cpu.h"
 #include "exec/gdbstub.h"
+//#include "helper.h"
+
+
 
 /* Old gdb always expect FPA registers.  Newer (xml-aware) gdb only expect
    whatever the target description contains.  Due to a historical mishap
@@ -55,6 +58,12 @@ int arm_cpu_gdb_read_register(CPUState *cs, uint8_t *mem_buf, int n)
     case 25:
         /* CPSR */
         return gdb_get_reg32(mem_buf, cpsr_read(env));
+    case 26:
+        /* MSP */
+        return gdb_get_reg32(mem_buf, env->regs[13]);
+    case 27:
+        /* PSP */
+        return gdb_get_reg32(mem_buf, env->v7m.other_sp);
     }
     /* Unknown register.  */
     return 0;
@@ -96,6 +105,11 @@ int arm_cpu_gdb_write_register(CPUState *cs, uint8_t *mem_buf, int n)
     case 25:
         /* CPSR */
         cpsr_write(env, tmp, 0xffffffff, CPSRWriteByGDBStub);
+        return 4;
+
+    case 26:
+        return 4;
+    case 27:
         return 4;
     }
     /* Unknown register.  */
