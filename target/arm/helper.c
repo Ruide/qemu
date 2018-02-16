@@ -6432,6 +6432,8 @@ static void v7m_push_callee_stack(ARMCPU *cpu, uint32_t lr, bool dotailchain)
 
     frameptr = *frame_sp_p - 0x28;
 
+    qemu_log_mask(LOG_GUEST_ERROR, "v7m_push_callee_stack: %x \n", (int)frameptr);
+
     stl_phys(cs->as, frameptr, 0xfefa125b);
     stl_phys(cs->as, frameptr + 0x8, env->regs[4]);
     stl_phys(cs->as, frameptr + 0xc, env->regs[5]);
@@ -6549,6 +6551,9 @@ static void v7m_push_stack(ARMCPU *cpu)
         env->regs[13] -= 4;
         xpsr |= XPSR_SPREALIGN;
     }
+    
+    qemu_log_mask(LOG_GUEST_ERROR, "v7m_push_stack \n");
+
     /* Switch to the handler mode.  */
     v7m_push(env, xpsr);
     v7m_push(env, env->regs[15]);
@@ -6573,6 +6578,9 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
     bool rettobase = false;
     bool exc_secure = false;
     bool return_to_secure;
+
+    //qemu_log_mask(LOG_GUEST_ERROR, "execute do_v7m_exception_exit\n");
+
 
     /* If we're not in Handler mode then jumps to magic exception-exit
      * addresses don't have magic behaviour. However for the v8M
@@ -6599,6 +6607,10 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
     if (env->thumb) {
         excret |= 1;
     }
+
+    qemu_log_mask(LOG_GUEST_ERROR, "Exception return: magic PC %" PRIx32
+                  " previous exception %d\n",
+                  excret, env->v7m.exception);
 
     qemu_log_mask(CPU_LOG_INT, "Exception return: magic PC %" PRIx32
                   " previous exception %d\n",
@@ -6704,6 +6716,9 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->v7m.sfsr |= R_V7M_SFSR_INVER_MASK;
         armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_SECURE, false);
         v7m_exception_taken(cpu, excret, true);
+        qemu_log_mask(LOG_GUEST_ERROR, "...taking SecureFault on existing "
+                      "stackframe: failed EXC_RETURN.ES validity check\n");
+
         qemu_log_mask(CPU_LOG_INT, "...taking SecureFault on existing "
                       "stackframe: failed EXC_RETURN.ES validity check\n");
         return;
@@ -6716,6 +6731,9 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->v7m.cfsr[env->v7m.secure] |= R_V7M_CFSR_INVPC_MASK;
         armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_USAGE, env->v7m.secure);
         v7m_exception_taken(cpu, excret, true);
+        qemu_log_mask(LOG_GUEST_ERROR, "...taking UsageFault on existing "
+                      "stackframe: failed exception return integrity check\n");
+
         qemu_log_mask(CPU_LOG_INT, "...taking UsageFault on existing "
                       "stackframe: failed exception return integrity check\n");
         return;
@@ -6767,6 +6785,11 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
                 env->v7m.sfsr |= R_V7M_SFSR_INVIS_MASK;
                 armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_SECURE, false);
                 v7m_exception_taken(cpu, excret, true);
+
+                qemu_log_mask(LOG_GUEST_ERROR, "...taking SecureFault on existing "
+                              "stackframe: failed exception return integrity "
+                              "signature check\n");
+
                 qemu_log_mask(CPU_LOG_INT, "...taking SecureFault on existing "
                               "stackframe: failed exception return integrity "
                               "signature check\n");
@@ -6797,6 +6820,8 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->regs[14] = ldl_phys(cs->as, frameptr + 0x14);
         env->regs[15] = ldl_phys(cs->as, frameptr + 0x18);
 
+
+
         /* Returning from an exception with a PC with bit 0 set is defined
          * behaviour on v8M (bit 0 is ignored), but for v7M it was specified
          * to be UNPREDICTABLE. In practice actual v7M hardware seems to ignore
@@ -6806,13 +6831,16 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
          * complain about the badly behaved guest.
          */
         if (env->regs[15] & 1) {
-            env->regs[15] &= ~1U;
+            //env->regs[15] &= ~1U;
+            /*
             if (!arm_feature(env, ARM_FEATURE_V8)) {
                 qemu_log_mask(LOG_GUEST_ERROR,
                               "M profile return from interrupt with misaligned "
-                              "PC is UNPREDICTABLE on v7M\n");
+                              "PC is UNPREDICTABLE on v7M, the ret addr is: %x\n",(int)env->regs[15]);
             }
+            */
         }
+
 
         xpsr = ldl_phys(cs->as, frameptr + 0x1c);
 
@@ -6832,6 +6860,11 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
                                         env->v7m.secure);
                 env->v7m.cfsr[env->v7m.secure] |= R_V7M_CFSR_INVPC_MASK;
                 v7m_exception_taken(cpu, excret, true);
+
+                qemu_log_mask(LOG_GUEST_ERROR, "...taking UsageFault on existing "
+                              "stackframe: failed exception return integrity "
+                              "check\n");
+
                 qemu_log_mask(CPU_LOG_INT, "...taking UsageFault on existing "
                               "stackframe: failed exception return integrity "
                               "check\n");
@@ -6841,6 +6874,10 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
 
         /* Commit to consuming the stack frame */
         frameptr += 0x20;
+
+
+        qemu_log_mask(LOG_GUEST_ERROR, "execute do_v7m_exception_exit, set pc. frameptr: %x, regs[15] a.k.a pc: %x\n",(int)frameptr,(int)env->regs[15]);
+
         /* Undo stack alignment (the SPREALIGN bit indicates that the original
          * pre-exception SP was not 8-aligned and we added a padding word to
          * align it, so we undo this by ORing in the bit that increases it
@@ -6860,15 +6897,21 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
      * exception return excret specified then this is a UsageFault.
      * v7M requires we make this check here; v8M did it earlier.
      */
+
     if (return_to_handler != arm_v7m_is_handler_mode(env)) {
-        /* Take an INVPC UsageFault by pushing the stack again;
-         * we know we're v7M so this is never a Secure UsageFault.
-         */
+        /*   Take an INVPC UsageFault by pushing the stack again;
+        we know we're v7M so this is never a Secure UsageFault.*/
+         
         assert(!arm_feature(env, ARM_FEATURE_V8));
         armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_USAGE, false);
         env->v7m.cfsr[env->v7m.secure] |= R_V7M_CFSR_INVPC_MASK;
         v7m_push_stack(cpu);
         v7m_exception_taken(cpu, excret, false);
+
+        qemu_log_mask(LOG_GUEST_ERROR, "...taking UsageFault on new stackframe: "
+                      "failed exception return integrity check\n");
+
+
         qemu_log_mask(CPU_LOG_INT, "...taking UsageFault on new stackframe: "
                       "failed exception return integrity check\n");
         return;
@@ -6876,6 +6919,7 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
 
     /* Otherwise, we have a successful exception exit. */
     arm_clear_exclusive(env);
+
     qemu_log_mask(CPU_LOG_INT, "...successful exception return\n");
 }
 

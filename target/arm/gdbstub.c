@@ -64,6 +64,9 @@ int arm_cpu_gdb_read_register(CPUState *cs, uint8_t *mem_buf, int n)
     case 27:
         /* PSP */
         return gdb_get_reg32(mem_buf, env->v7m.other_sp);
+    case 28:
+        /* Exception */
+        return gdb_get_reg32(mem_buf, env->v7m.exception);
     }
     /* Unknown register.  */
     return 0;

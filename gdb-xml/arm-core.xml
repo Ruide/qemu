@@ -32,5 +32,6 @@
   <!-- These registers were inspired by J-Link -->
   <reg name="msp" bitsize="32" regnum="26"/>
   <reg name="psp" bitsize="32" regnum="27"/>
+  <reg name="exception" bitsize="32" regnum="28"/>
 
 </feature>

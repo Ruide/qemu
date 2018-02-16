@@ -41,7 +41,7 @@ int reset_help = 0;
 int64_t start_tick;
 int64_t current_time;
 int64_t compare_time;
-
+int64_t first_compare_trigger;
 
 static void saon_rtc_update_irq(saon_rtc_state *s)
 {
@@ -56,8 +56,11 @@ static void saon_rtc_update_irq(saon_rtc_state *s)
             if(((s->chctl)&0x1) == 1){
                 if(current_time>compare_time){
                     if(current_time>0){
-                        qemu_log_mask(LOG_UNIMP, "rtc irq call interrupt, current_time: %d, compare_time: %d\n",(int)current_time,(int)compare_time);
-                        qemu_set_irq(s->irq, 1);
+                        if(((s->evflags)&0x1) == 1){
+                            qemu_log_mask(LOG_UNIMP, "rtc irq call interrupt, current_time: %d, compare_time: %d\n",(int)current_time,(int)compare_time);
+                            //s->evflags = 0;
+                            qemu_set_irq(s->irq, 1);
+                        }
                     }
                 }
             }
@@ -127,6 +130,8 @@ static void saon_rtc_tick(void *opaque)
     // 3. CHCTL.ch0_en == 1
 
     if (current_time > compare_time){
+        first_compare_trigger = current_time;
+
         saon_rtc_update_irq(s);
         //15258.78 ns is the min unit for [0~15] bit of 32 bit time compare register
     }
@@ -206,11 +211,16 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         }
         break;
     case 0x04: 
-        s->evflags = value;
+        if(value == 0x1){
+            s->evflags = 0;    
+        }
         saon_rtc_update_irq(s);
         break;
     case 0x14: 
         s->chctl = value;
+        if(value == 0x1){
+            s->evflags = 1;            
+        }
         saon_rtc_update_irq(s);
         break;
     case 0x18: 
