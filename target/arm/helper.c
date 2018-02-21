@@ -6604,9 +6604,15 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
      * gen_bx(). Reconstitute it.
      */
     excret = env->regs[15];
+            qemu_log_mask(LOG_GUEST_ERROR,
+                              "excret is: %x\n",(int)excret);
+
     if (env->thumb) {
         excret |= 1;
     }
+    //        qemu_log_mask(LOG_GUEST_ERROR,
+    //                          "excret is: %x\n",(int)excret);
+    // excret is 0xfffffffc -> if thumb, 0xfffffffd
 
     qemu_log_mask(LOG_GUEST_ERROR, "Exception return: magic PC %" PRIx32
                   " previous exception %d\n",
@@ -6768,7 +6774,7 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
             qemu_log_mask(LOG_GUEST_ERROR,
                           "M profile exception return with non-8-aligned SP "
                           "for destination state is UNPREDICTABLE\n");
-            env->regs[15] &= ~1U; //work around for now, should be a bug in guest code.
+            // env->regs[15] &= ~1U; //work around for now, should be a bug in guest code.
             // the return address should not have 0 bit set, should be cleared
             // only when bx to an code address should the 0 bit set to indicate thumb instruction.
         }
@@ -6816,10 +6822,11 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->regs[1] = ldl_phys(cs->as, frameptr + 0x4);
         env->regs[2] = ldl_phys(cs->as, frameptr + 0x8);
         env->regs[3] = ldl_phys(cs->as, frameptr + 0xc);
-        env->regs[12] = ldl_phys(cs->as, frameptr + 0x10);
-        env->regs[14] = ldl_phys(cs->as, frameptr + 0x14);
-        env->regs[15] = ldl_phys(cs->as, frameptr + 0x18);
+        env->regs[12] = ldl_phys(cs->as, frameptr + 0x10);//
+        env->regs[14] = ldl_phys(cs->as, frameptr + 0x14);//
+        env->regs[15] = ldl_phys(cs->as, frameptr + 0x18);//pc
 
+                qemu_log_mask(LOG_GUEST_ERROR, "pop registers: r12=%x r14=%x r15= %x\n",(int)env->regs[12],(int)env->regs[14],(int)env->regs[15]);
 
 
         /* Returning from an exception with a PC with bit 0 set is defined
@@ -6831,7 +6838,10 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
          * complain about the badly behaved guest.
          */
         if (env->regs[15] & 1) {
-            //env->regs[15] &= ~1U;
+            env->regs[15] &= ~1U;
+            //qemu_log_mask(LOG_GUEST_ERROR,
+            //                  "excret is: %x\n",(int)excret);
+
             /*
             if (!arm_feature(env, ARM_FEATURE_V8)) {
                 qemu_log_mask(LOG_GUEST_ERROR,
@@ -6840,6 +6850,15 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
             }
             */
         }
+        /* original
+        if (env->regs[15] & 1) {
+            env->regs[15] &= ~1U;
+            if (!arm_feature(env, ARM_FEATURE_V8)) {
+                qemu_log_mask(LOG_GUEST_ERROR,
+                              "M profile return from interrupt with misaligned "
+                              "PC is UNPREDICTABLE on v7M\n");
+            }
+        } */
 
 
         xpsr = ldl_phys(cs->as, frameptr + 0x1c);
