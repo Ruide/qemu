@@ -6552,7 +6552,8 @@ static void v7m_push_stack(ARMCPU *cpu)
         xpsr |= XPSR_SPREALIGN;
     }
     
-    qemu_log_mask(LOG_GUEST_ERROR, "v7m_push_stack \n");
+    //before peter
+    //qemu_log_mask(LOG_GUEST_ERROR, "v7m_push_stack \n");
 
     /* Switch to the handler mode.  */
     v7m_push(env, xpsr);
@@ -6614,9 +6615,6 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
     //                          "excret is: %x\n",(int)excret);
     // excret is 0xfffffffc -> if thumb, 0xfffffffd
 
-    qemu_log_mask(LOG_GUEST_ERROR, "Exception return: magic PC %" PRIx32
-                  " previous exception %d\n",
-                  excret, env->v7m.exception);
 
     qemu_log_mask(CPU_LOG_INT, "Exception return: magic PC %" PRIx32
                   " previous exception %d\n",
@@ -6722,8 +6720,6 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->v7m.sfsr |= R_V7M_SFSR_INVER_MASK;
         armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_SECURE, false);
         v7m_exception_taken(cpu, excret, true);
-        qemu_log_mask(LOG_GUEST_ERROR, "...taking SecureFault on existing "
-                      "stackframe: failed EXC_RETURN.ES validity check\n");
 
         qemu_log_mask(CPU_LOG_INT, "...taking SecureFault on existing "
                       "stackframe: failed EXC_RETURN.ES validity check\n");
@@ -6737,8 +6733,6 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->v7m.cfsr[env->v7m.secure] |= R_V7M_CFSR_INVPC_MASK;
         armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_USAGE, env->v7m.secure);
         v7m_exception_taken(cpu, excret, true);
-        qemu_log_mask(LOG_GUEST_ERROR, "...taking UsageFault on existing "
-                      "stackframe: failed exception return integrity check\n");
 
         qemu_log_mask(CPU_LOG_INT, "...taking UsageFault on existing "
                       "stackframe: failed exception return integrity check\n");
@@ -6792,10 +6786,6 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
                 armv7m_nvic_set_pending(env->nvic, ARMV7M_EXCP_SECURE, false);
                 v7m_exception_taken(cpu, excret, true);
 
-                qemu_log_mask(LOG_GUEST_ERROR, "...taking SecureFault on existing "
-                              "stackframe: failed exception return integrity "
-                              "signature check\n");
-
                 qemu_log_mask(CPU_LOG_INT, "...taking SecureFault on existing "
                               "stackframe: failed exception return integrity "
                               "signature check\n");
@@ -6826,7 +6816,8 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         env->regs[14] = ldl_phys(cs->as, frameptr + 0x14);//
         env->regs[15] = ldl_phys(cs->as, frameptr + 0x18);//pc
 
-                qemu_log_mask(LOG_GUEST_ERROR, "pop registers: r12=%x r14=%x r15= %x\n",(int)env->regs[12],(int)env->regs[14],(int)env->regs[15]);
+        //before peter
+        //qemu_log_mask(LOG_GUEST_ERROR, "pop registers: r12=%x r14=%x r15= %x\n",(int)env->regs[12],(int)env->regs[14],(int)env->regs[15]);
 
 
         /* Returning from an exception with a PC with bit 0 set is defined
@@ -6842,13 +6833,13 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
             //qemu_log_mask(LOG_GUEST_ERROR,
             //                  "excret is: %x\n",(int)excret);
 
-            /*
+            
             if (!arm_feature(env, ARM_FEATURE_V8)) {
                 qemu_log_mask(LOG_GUEST_ERROR,
                               "M profile return from interrupt with misaligned "
                               "PC is UNPREDICTABLE on v7M, the ret addr is: %x\n",(int)env->regs[15]);
             }
-            */
+            
         }
         /* original
         if (env->regs[15] & 1) {
@@ -6880,10 +6871,6 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
                 env->v7m.cfsr[env->v7m.secure] |= R_V7M_CFSR_INVPC_MASK;
                 v7m_exception_taken(cpu, excret, true);
 
-                qemu_log_mask(LOG_GUEST_ERROR, "...taking UsageFault on existing "
-                              "stackframe: failed exception return integrity "
-                              "check\n");
-
                 qemu_log_mask(CPU_LOG_INT, "...taking UsageFault on existing "
                               "stackframe: failed exception return integrity "
                               "check\n");
@@ -6894,8 +6881,15 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         /* Commit to consuming the stack frame */
         frameptr += 0x20;
 
+        //qemu_log_mask(LOG_GUEST_ERROR, "former xpsr: %x\n",(int)xpsr);
+        //xpsr |= (0x1 << 24);
+        //xpsr = 0x0;
+        //qemu_log_mask(LOG_GUEST_ERROR, "new xpsr: %x\n",(int)xpsr);
+        
+        // before peter
+        //qemu_log_mask(LOG_GUEST_ERROR, "execute do_v7m_exception_exit, set pc. frameptr: %x, regs[15] a.k.a pc: %x, xpsr: %x\n",(int)frameptr,(int)env->regs[15],(int)xpsr);
 
-        qemu_log_mask(LOG_GUEST_ERROR, "execute do_v7m_exception_exit, set pc. frameptr: %x, regs[15] a.k.a pc: %x\n",(int)frameptr,(int)env->regs[15]);
+
 
         /* Undo stack alignment (the SPREALIGN bit indicates that the original
          * pre-exception SP was not 8-aligned and we added a padding word to
@@ -6909,6 +6903,7 @@ static void do_v7m_exception_exit(ARMCPU *cpu)
         *frame_sp_p = frameptr;
     }
     /* This xpsr_write() will invalidate frame_sp_p as it may switch stack */
+    //qemu_log_mask(LOG_GUEST_ERROR, "new xpsr: %x\n",(int)xpsr);
     xpsr_write(env, xpsr, ~XPSR_SPREALIGN);
 
     /* The restored xPSR exception field will be zero if we're
