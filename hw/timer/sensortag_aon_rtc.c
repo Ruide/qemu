@@ -56,11 +56,11 @@ static void saon_rtc_update_irq(saon_rtc_state *s)
             if(((s->chctl)&0x1) == 1){
                 if(current_time>compare_time){
                     if(current_time>0){
-                        if(((s->evflags)&0x1) == 1){
+//                        if(((s->evflags)&0x1) == 1){
                             qemu_log_mask(LOG_UNIMP, "rtc irq call interrupt, current_time: %d, compare_time: %d\n",(int)current_time,(int)compare_time);
                             //s->evflags = 0;
-                            qemu_set_irq(s->irq, 1);
-                        }
+                            qemu_set_irq(s->irq, ((s->evflags)&0x1));
+//                        }
                     }
                 }
             }
@@ -197,8 +197,8 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
     uint32_t sync; //0x2c aon sync
 */
 
-//	qemu_log_mask(LOG_UNIMP,
-//            "saon_rtc_write_unimplemented: Offset %x Write value %x\n", (int)offset,(int)value);
+	//qemu_log_mask(LOG_UNIMP,
+    //        "saon_rtc_write_unimplemented: Offset %x Write value %x\n", (int)offset,(int)value);
 
 
     switch (offset) {
@@ -209,11 +209,13 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
     		start_tick=qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
 	    	reset_help = 1;
         }
+        qemu_log_mask(LOG_UNIMP, "write ctl: %d ns\n", (int)s->ctl);
         break;
     case 0x04: 
         if(value == 0x1){
             s->evflags = 0;    
         }
+        qemu_log_mask(LOG_UNIMP, "write evflags: %d ns\n", (int)s->evflags);
         saon_rtc_update_irq(s);
         break;
     case 0x14: 
@@ -221,11 +223,12 @@ static void saon_rtc_write(void *opaque, hwaddr offset,
         if(value == 0x1){
             s->evflags = 1;            
         }
+        qemu_log_mask(LOG_UNIMP, "write chctl: %d ns\n", (int)s->chctl);
         saon_rtc_update_irq(s);
         break;
     case 0x18: 
         s->ch0cmp = value;
-        qemu_log_mask(LOG_UNIMP, "write compare time: %d ns\n", (int)s->ch0cmp);
+        qemu_log_mask(LOG_UNIMP, "write ch0cmp: %d ns\n", (int)s->ch0cmp);
         saon_rtc_tick(s);
         //saon_rtc_reload(s,1);
         break;
